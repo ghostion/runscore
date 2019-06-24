@@ -2,6 +2,7 @@ var accountManageVM = new Vue({
 	el : '#account-manage',
 	data : {
 		accountTypeDictItems : [],
+		rebateDictItems : [],
 		accountStateDictItems : [],
 		userName : '',
 		realName : '',
@@ -24,6 +25,7 @@ var accountManageVM = new Vue({
 	},
 	mounted : function() {
 		this.loadAccountTypeItem();
+		this.loadRebateDictItem();
 		this.loadAccountStateItem();
 		this.initTable();
 	},
@@ -37,6 +39,13 @@ var accountManageVM = new Vue({
 				}
 			}).then(function(res) {
 				this.accountTypeDictItems = res.body.data;
+			});
+		},
+
+		loadRebateDictItem : function() {
+			var that = this;
+			that.$http.get('/agent/findAllRebate').then(function(res) {
+				this.rebateDictItems = res.body.data;
 			});
 		},
 
@@ -86,17 +95,34 @@ var accountManageVM = new Vue({
 					return html;
 				},
 				columns : [ {
-					field : 'userName',
-					title : '用户名'
+					title : '用户名',
+					formatter : function(value, row, index) {
+						var userName = row.userName;
+						if (row.accountType == 'admin') {
+							return userName + '(' + row.accountTypeName + ')';
+						}
+						if (row.accountType == 'merchant') {
+							return userName + '(' + row.accountTypeName + ')';
+						}
+						return userName + '(' + row.accountLevel + '级' + row.accountTypeName + ')';
+					},
+					cellStyle : {
+						classes : 'user-name'
+					}
 				}, {
 					field : 'realName',
 					title : '真实姓名'
 				}, {
-					field : 'accountTypeName',
-					title : '账号类型'
-				}, {
 					field : 'cashDeposit',
 					title : '保证金'
+				}, {
+					title : '返点',
+					formatter : function(value, row, index) {
+						if (row.rebate == null) {
+							return;
+						}
+						return row.rebate + '%';
+					},
 				}, {
 					field : 'stateName',
 					title : '账号状态'
@@ -191,6 +217,7 @@ var accountManageVM = new Vue({
 				realName : '',
 				loginPwd : '',
 				accountType : '',
+				rebate : '',
 				state : ''
 			}
 		},
@@ -224,6 +251,14 @@ var accountManageVM = new Vue({
 			}
 			if (selectedAccount.accountType == null || selectedAccount.accountType == '') {
 				layer.alert('请选择账号类型', {
+					title : '提示',
+					icon : 7,
+					time : 3000
+				});
+				return;
+			}
+			if (selectedAccount.rebate == null || selectedAccount.rebate == '') {
+				layer.alert('请选择返点', {
 					title : '提示',
 					icon : 7,
 					time : 3000
@@ -312,6 +347,14 @@ var accountManageVM = new Vue({
 				});
 				return;
 			}
+			if (selectedAccount.rebate == null || selectedAccount.rebate == '') {
+				layer.alert('请选择返点', {
+					title : '提示',
+					icon : 7,
+					time : 3000
+				});
+				return;
+			}
 			if (selectedAccount.state == null || selectedAccount.state == '') {
 				layer.alert('请选择状态', {
 					title : '提示',
@@ -325,6 +368,7 @@ var accountManageVM = new Vue({
 				userName : selectedAccount.userName,
 				realName : selectedAccount.realName,
 				accountType : selectedAccount.accountType,
+				rebate : selectedAccount.rebate,
 				state : selectedAccount.state
 			}, {
 				emulateJSON : true

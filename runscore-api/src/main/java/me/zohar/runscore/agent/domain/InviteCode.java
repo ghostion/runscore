@@ -1,4 +1,4 @@
-package me.zohar.runscore.useraccount.domain;
+package me.zohar.runscore.agent.domain;
 
 import java.util.Date;
 
@@ -14,14 +14,10 @@ import javax.persistence.Table;
 
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
-import org.hibernate.annotations.NotFound;
-import org.hibernate.annotations.NotFoundAction;
 
-import cn.hutool.core.date.DateField;
-import cn.hutool.core.date.DateUtil;
 import lombok.Getter;
 import lombok.Setter;
-import me.zohar.runscore.common.utils.IdUtils;
+import me.zohar.runscore.useraccount.domain.UserAccount;
 
 /**
  * 邀请码
@@ -33,7 +29,7 @@ import me.zohar.runscore.common.utils.IdUtils;
 @Getter
 @Setter
 @Entity
-@Table(name = "invite_code", schema = "lottery")
+@Table(name = "invite_code")
 @DynamicInsert(true)
 @DynamicUpdate(true)
 public class InviteCode {
@@ -49,6 +45,16 @@ public class InviteCode {
 	 * 邀请码
 	 */
 	private String code;
+
+	/**
+	 * 账号类型
+	 */
+	private String accountType;
+
+	/**
+	 * 返点
+	 */
+	private Double rebate;
 
 	/**
 	 * 创建时间
@@ -69,34 +75,8 @@ public class InviteCode {
 	/**
 	 * 邀请人
 	 */
-	@NotFound(action = NotFoundAction.IGNORE)
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "inviter_id", updatable = false, insertable = false, foreignKey = @ForeignKey(value = ConstraintMode.NO_CONSTRAINT))
 	private UserAccount inviter;
-	
-	/**
-	 * 受邀人id
-	 */
-	@Column(name = "invitee_id", length = 32)
-	private String inviteeId;
-	
-	/**
-	 * 受邀人
-	 */
-	@NotFound(action = NotFoundAction.IGNORE)
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "invitee_id", updatable = false, insertable = false, foreignKey = @ForeignKey(value = ConstraintMode.NO_CONSTRAINT))
-	private UserAccount invitee;
-
-	public static InviteCode generateInviteCode(String code, Integer effectiveDuration, String inviterId) {
-		InviteCode inviteCode = new InviteCode();
-		inviteCode.setId(IdUtils.getId());
-		inviteCode.setCode(code);
-		inviteCode.setCreateTime(new Date());
-		inviteCode.setPeriodOfValidity(
-				DateUtil.offset(inviteCode.getCreateTime(), DateField.DAY_OF_YEAR, effectiveDuration));
-		inviteCode.setInviterId(inviterId);
-		return inviteCode;
-	}
 
 }

@@ -25,12 +25,12 @@ public class UserAccountInfoVO {
 	 * 用户名
 	 */
 	private String userName;
-	
+
 	/**
 	 * 真实姓名
 	 */
 	private String realName;
-	
+
 	/**
 	 * 账号类型
 	 */
@@ -39,15 +39,15 @@ public class UserAccountInfoVO {
 	private String accountTypeName;
 
 	/**
+	 * 返点
+	 */
+	private Double rebate;
+
+	/**
 	 * 保证金
 	 */
 	private Double cashDeposit;
-	
-	/**
-	 * 佣金
-	 */
-	private Double commission;
-	
+
 	/**
 	 * 接单状态
 	 */

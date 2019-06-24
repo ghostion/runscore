@@ -15,7 +15,6 @@ import me.zohar.runscore.useraccount.param.BindBankInfoParam;
 import me.zohar.runscore.useraccount.param.ModifyLoginPwdParam;
 import me.zohar.runscore.useraccount.param.ModifyMoneyPwdParam;
 import me.zohar.runscore.useraccount.param.UserAccountRegisterParam;
-import me.zohar.runscore.useraccount.service.InviteCodeService;
 import me.zohar.runscore.useraccount.service.UserAccountService;
 import me.zohar.runscore.useraccount.vo.UserAccountInfoVO;
 
@@ -26,9 +25,6 @@ public class UserAccountController {
 	@Autowired
 	private UserAccountService userAccountService;
 	
-	@Autowired
-	private InviteCodeService inviteCodeService;
-
 	@PostMapping("/updateReceiveOrderState")
 	@ResponseBody
 	public Result updateReceiveOrderState(String receiveOrderState) {
@@ -79,7 +75,7 @@ public class UserAccountController {
 	@PostMapping("/register")
 	@ResponseBody
 	public Result register(UserAccountRegisterParam param) {
-		userAccountService.userAccountRegister(param);
+		userAccountService.register(param);
 		return Result.success();
 	}
 
@@ -102,15 +98,6 @@ public class UserAccountController {
 				.getPrincipal();
 		param.setUserAccountId(user.getUserAccountId());
 		return Result.success().setData(userAccountService.findAccountChangeLogByPage(param));
-	}
-
-	@GetMapping("/generateInviteCode")
-	@ResponseBody
-	public Result generateInviteCode() {
-		UserAccountDetails user = (UserAccountDetails) SecurityContextHolder.getContext().getAuthentication()
-				.getPrincipal();
-		inviteCodeService.generateInviteCode(user.getUserAccountId());
-		return Result.success();
 	}
 
 }

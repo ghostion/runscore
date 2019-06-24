@@ -109,6 +109,8 @@ public class Constant {
 	public static final String 账变日志类型_改单为实际支付金额并退款 = "10";
 
 	public static final String 账变日志类型_客服取消订单并退款 = "11";
+	
+	public static final String 账变日志类型_奖励金返点 = "12";
 
 	public static final String 充提日志订单类型_充值 = "1";
 
@@ -127,5 +129,9 @@ public class Constant {
 	public static final Integer 商户订单接单有效时长 = 2;
 
 	public static final Integer 商户订单支付有效时长 = 5;
+	
+	public static final String 商户订单ID = "MERCHANT_ORDER_ID";
+	
+	public static final String 订单返点ID = "ORDER_REBATE_ID";
 
 }

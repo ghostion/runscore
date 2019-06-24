@@ -23,6 +23,7 @@ import lombok.Setter;
 import me.zohar.runscore.common.utils.IdUtils;
 import me.zohar.runscore.constants.Constant;
 import me.zohar.runscore.merchant.domain.MerchantOrder;
+import me.zohar.runscore.merchant.domain.OrderRebate;
 import me.zohar.runscore.rechargewithdraw.domain.RechargeOrder;
 import me.zohar.runscore.rechargewithdraw.domain.WithdrawRecord;
 
@@ -146,19 +147,18 @@ public class AccountChangeLog {
 	 * 构建接单奖励金账变日志
 	 * 
 	 * @param userAccount
-	 * @param returnWater
-	 * @param returnWaterRate
+	 * @param bounty
+	 * @param rebate
 	 * @return
 	 */
-	public static AccountChangeLog buildWithReceiveOrderBounty(UserAccount userAccount, Double returnWater,
-			Double returnWaterRate) {
+	public static AccountChangeLog buildWithReceiveOrderBounty(UserAccount userAccount, Double bounty, Double rebate) {
 		AccountChangeLog log = new AccountChangeLog();
 		log.setId(IdUtils.getId());
 		log.setOrderNo(log.getId());
 		log.setAccountChangeTime(new Date());
 		log.setAccountChangeTypeCode(Constant.账变日志类型_接单奖励金);
-		log.setAccountChangeAmount(NumberUtil.round(returnWater, 4).doubleValue());
-		log.setNote(MessageFormat.format("接单返水率:{0}%", returnWaterRate));
+		log.setAccountChangeAmount(NumberUtil.round(bounty, 4).doubleValue());
+		log.setNote(MessageFormat.format("接单返点:{0}%", rebate));
 		log.setCashDeposit(userAccount.getCashDeposit());
 		log.setUserAccountId(userAccount.getId());
 		return log;
@@ -258,6 +258,25 @@ public class AccountChangeLog {
 		log.setAccountChangeTime(new Date());
 		log.setAccountChangeTypeCode(accountChangeAmount > 0 ? Constant.账变日志类型_手工增保证金 : Constant.账变日志类型_手工减保证金);
 		log.setAccountChangeAmount(accountChangeAmount);
+		log.setCashDeposit(userAccount.getCashDeposit());
+		log.setUserAccountId(userAccount.getId());
+		return log;
+	}
+
+	/**
+	 * 构建订单返点账变日志
+	 * 
+	 * @param userAccount
+	 * @param orderRebate
+	 * @return
+	 */
+	public static AccountChangeLog buildWithOrderRebate(UserAccount userAccount, OrderRebate orderRebate) {
+		AccountChangeLog log = new AccountChangeLog();
+		log.setId(IdUtils.getId());
+		log.setOrderNo(orderRebate.getId());
+		log.setAccountChangeTime(new Date());
+		log.setAccountChangeTypeCode(Constant.账变日志类型_奖励金返点);
+		log.setAccountChangeAmount(NumberUtil.round(orderRebate.getRebateAmount(), 4).doubleValue());
 		log.setCashDeposit(userAccount.getCashDeposit());
 		log.setUserAccountId(userAccount.getId());
 		return log;

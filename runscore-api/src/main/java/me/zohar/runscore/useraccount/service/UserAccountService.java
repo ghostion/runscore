@@ -24,11 +24,15 @@ import org.springframework.validation.annotation.Validated;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.StrUtil;
+import me.zohar.runscore.agent.domain.InviteCode;
+import me.zohar.runscore.agent.repo.InviteCodeRepo;
 import me.zohar.runscore.common.exception.BizError;
 import me.zohar.runscore.common.exception.BizException;
 import me.zohar.runscore.common.valid.ParamValid;
 import me.zohar.runscore.common.vo.PageResult;
 import me.zohar.runscore.constants.Constant;
+import me.zohar.runscore.mastercontrol.domain.InviteRegisterSetting;
+import me.zohar.runscore.mastercontrol.repo.InviteRegisterSettingRepo;
 import me.zohar.runscore.useraccount.domain.AccountChangeLog;
 import me.zohar.runscore.useraccount.domain.UserAccount;
 import me.zohar.runscore.useraccount.param.AccountChangeLogQueryCondParam;
@@ -51,15 +55,18 @@ import me.zohar.runscore.useraccount.vo.UserAccountInfoVO;
 @Validated
 @Service
 public class UserAccountService {
-	
-	@Autowired
-	private InviteCodeService inviteCodeService;
 
 	@Autowired
 	private UserAccountRepo userAccountRepo;
 
 	@Autowired
 	private AccountChangeLogRepo accountChangeLogRepo;
+
+	@Autowired
+	private InviteCodeRepo inviteCodeRepo;
+
+	@Autowired
+	private InviteRegisterSettingRepo inviteRegisterSettingRepo;
 
 	/**
 	 * 更新接单状态
@@ -91,8 +98,13 @@ public class UserAccountService {
 		if (existUserAccount != null && !existUserAccount.getId().equals(param.getUserAccountId())) {
 			throw new BizException(BizError.用户名已存在);
 		}
-
 		UserAccount userAccount = userAccountRepo.getOne(param.getUserAccountId());
+		if (userAccount.getInviter() != null) {
+			// 校验下级账号的返点不能大于上级账号
+			if (param.getRebate() > userAccount.getInviter().getRebate()) {
+				throw new BizException(BizError.下级账号的返点不能大于上级账号);
+			}
+		}
 		BeanUtils.copyProperties(param, userAccount);
 		userAccountRepo.save(userAccount);
 	}
@@ -203,13 +215,18 @@ public class UserAccountService {
 		String encodePwd = new BCryptPasswordEncoder().encode(param.getLoginPwd());
 		param.setLoginPwd(encodePwd);
 		UserAccount newUserAccount = param.convertToPo();
-		newUserAccount.setCashDeposit(0d);
 		if (StrUtil.isNotBlank(param.getInviterUserName())) {
 			UserAccount inviter = userAccountRepo.findByUserName(param.getInviterUserName());
 			if (inviter == null) {
 				throw new BizException(BizError.邀请人不存在);
 			}
+			// 校验下级账号的返点不能大于上级账号
+			if (param.getRebate() > inviter.getRebate()) {
+				throw new BizException(BizError.下级账号的返点不能大于上级账号);
+			}
 			newUserAccount.setInviterId(inviter.getId());
+			newUserAccount.setAccountLevel(inviter.getAccountLevel() + 1);
+			newUserAccount.setAccountLevelPath(inviter.getAccountLevelPath() + "." + newUserAccount.getId());
 		}
 		userAccountRepo.save(newUserAccount);
 	}
@@ -221,16 +238,22 @@ public class UserAccountService {
 	 */
 	@ParamValid
 	@Transactional
-	public void userAccountRegister(UserAccountRegisterParam param) {
+	public void register(UserAccountRegisterParam param) {
 		UserAccount userAccount = userAccountRepo.findByUserName(param.getUserName());
 		if (userAccount != null) {
 			throw new BizException(BizError.用户名已存在);
 		}
-		String encodePwd = new BCryptPasswordEncoder().encode(param.getLoginPwd());
-		param.setLoginPwd(encodePwd);
+		param.setLoginPwd(new BCryptPasswordEncoder().encode(param.getLoginPwd()));
 		UserAccount newUserAccount = param.convertToPo();
-		newUserAccount.setCashDeposit(0d);
-		newUserAccount.setInviterId(inviteCodeService.confirmCodeAndGetInviterId(param.getInviteCode(), newUserAccount.getId()));
+		InviteRegisterSetting setting = inviteRegisterSettingRepo.findTopByOrderByEnabled();
+		if (setting != null && setting.getEnabled()) {
+			InviteCode inviteCode = inviteCodeRepo
+					.findTopByCodeAndPeriodOfValidityGreaterThanEqual(param.getInviteCode(), new Date());
+			if (inviteCode == null) {
+				throw new BizException(BizError.邀请码不存在或已失效);
+			}
+			newUserAccount.updateInviteInfo(inviteCode);
+		}
 		userAccountRepo.save(newUserAccount);
 	}
 

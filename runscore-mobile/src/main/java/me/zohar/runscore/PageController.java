@@ -136,4 +136,24 @@ public class PageController {
 		return "online-customer";
 	}
 
+	/**
+	 * 代理中心
+	 * 
+	 * @return
+	 */
+	@GetMapping("/agent-center")
+	public String agentCenter() {
+		return "agent-center";
+	}
+
+	/**
+	 * 代理开户
+	 * 
+	 * @return
+	 */
+	@GetMapping("/agent-open-an-account")
+	public String agentOpenAnAccount() {
+		return "agent-open-an-account";
+	}
+
 }

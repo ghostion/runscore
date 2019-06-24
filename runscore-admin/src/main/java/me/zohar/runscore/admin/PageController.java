@@ -8,7 +8,7 @@ public class PageController {
 
 	@GetMapping("/")
 	public String index() {
-		return "index";
+		return "statistical-analysis";
 	}
 
 	/**
@@ -159,6 +159,16 @@ public class PageController {
 	@GetMapping("/login-log")
 	public String loginLog() {
 		return "login-log";
+	}
+	
+	/**
+	 * 返点表
+	 * 
+	 * @return
+	 */
+	@GetMapping("/rebate")
+	public String rebate() {
+		return "rebate";
 	}
 
 }

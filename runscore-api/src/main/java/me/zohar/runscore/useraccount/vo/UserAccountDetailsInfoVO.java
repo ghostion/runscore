@@ -46,7 +46,17 @@ public class UserAccountDetailsInfoVO {
 	private String accountTypeName;
 
 	/**
-	 * 余额
+	 * 账号级别
+	 */
+	private Integer accountLevel;
+
+	/**
+	 * 返点
+	 */
+	private Double rebate;
+
+	/**
+	 * 保证金
 	 */
 	private Double cashDeposit;
 
@@ -96,6 +106,8 @@ public class UserAccountDetailsInfoVO {
 	private String receiveOrderState;
 
 	private String receiveOrderStateName;
+
+	private String inviterId;
 
 	/**
 	 * 邀请人

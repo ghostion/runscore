@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.TimeUnit;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -22,6 +23,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
@@ -36,6 +38,7 @@ import cn.hutool.core.util.StrUtil;
 import lombok.extern.slf4j.Slf4j;
 import me.zohar.runscore.common.exception.BizError;
 import me.zohar.runscore.common.exception.BizException;
+import me.zohar.runscore.common.utils.ThreadPoolUtils;
 import me.zohar.runscore.common.valid.ParamValid;
 import me.zohar.runscore.common.vo.PageResult;
 import me.zohar.runscore.constants.Constant;
@@ -45,10 +48,12 @@ import me.zohar.runscore.mastercontrol.domain.PlatformOrderSetting;
 import me.zohar.runscore.mastercontrol.repo.PlatformOrderSettingRepo;
 import me.zohar.runscore.merchant.domain.Merchant;
 import me.zohar.runscore.merchant.domain.MerchantOrder;
+import me.zohar.runscore.merchant.domain.OrderRebate;
 import me.zohar.runscore.merchant.param.MerchantOrderQueryCondParam;
 import me.zohar.runscore.merchant.param.StartOrderParam;
 import me.zohar.runscore.merchant.repo.MerchantOrderRepo;
 import me.zohar.runscore.merchant.repo.MerchantRepo;
+import me.zohar.runscore.merchant.repo.OrderRebateRepo;
 import me.zohar.runscore.merchant.vo.MerchantOrderDetailsVO;
 import me.zohar.runscore.merchant.vo.MerchantOrderVO;
 import me.zohar.runscore.merchant.vo.MyWaitConfirmOrderVO;
@@ -63,6 +68,9 @@ import me.zohar.runscore.useraccount.repo.UserAccountRepo;
 @Slf4j
 @Service
 public class MerchantOrderService {
+
+	@Autowired
+	private StringRedisTemplate redisTemplate;
 
 	@Autowired
 	private MerchantOrderRepo merchantOrderRepo;
@@ -81,6 +89,9 @@ public class MerchantOrderService {
 
 	@Autowired
 	private PlatformOrderSettingRepo platformOrderSettingRepo;
+
+	@Autowired
+	private OrderRebateRepo orderRebateRepo;
 
 	@Transactional(readOnly = true)
 	public MerchantOrderDetailsVO findMerchantOrderDetailsById(@NotBlank String orderId) {
@@ -206,23 +217,89 @@ public class MerchantOrderService {
 	 * 接单奖励金结算
 	 */
 	@Transactional
-	public void receiveOrderBountySettlement(MerchantOrder platformOrder) {
+	public void receiveOrderBountySettlement(MerchantOrder merchantOrder) {
 		PlatformOrderSetting setting = platformOrderSettingRepo.findTopByOrderByLatelyUpdateTime();
-		if (setting == null || !setting.getReturnWaterRateEnabled() || setting.getReturnWaterRate() == null) {
-			platformOrder.updateBounty(0d);
-			merchantOrderRepo.save(platformOrder);
+		if (setting == null || !setting.getReturnWaterRateEnabled()) {
+			merchantOrder.updateBounty(0d);
+			merchantOrderRepo.save(merchantOrder);
 			return;
 		}
 
-		UserAccount userAccount = platformOrder.getUserAccount();
-		double returnWater = NumberUtil
-				.round(platformOrder.getGatheringAmount() * setting.getReturnWaterRate() * 0.01, 4).doubleValue();
-		platformOrder.updateBounty(returnWater);
-		merchantOrderRepo.save(platformOrder);
-		userAccount.setCashDeposit(NumberUtil.round(userAccount.getCashDeposit() + returnWater, 4).doubleValue());
+		UserAccount userAccount = merchantOrder.getUserAccount();
+		double bounty = NumberUtil.round(merchantOrder.getGatheringAmount() * userAccount.getRebate() * 0.01, 4)
+				.doubleValue();
+		merchantOrder.updateBounty(bounty);
+		merchantOrderRepo.save(merchantOrder);
+		userAccount.setCashDeposit(NumberUtil.round(userAccount.getCashDeposit() + bounty, 4).doubleValue());
 		userAccountRepo.save(userAccount);
-		accountChangeLogRepo.save(
-				AccountChangeLog.buildWithReceiveOrderBounty(userAccount, returnWater, setting.getReturnWaterRate()));
+		accountChangeLogRepo
+				.save(AccountChangeLog.buildWithReceiveOrderBounty(userAccount, bounty, userAccount.getRebate()));
+		generateOrderRebate(merchantOrder);
+		ThreadPoolUtils.getOrderRebateSettlementPool().schedule(() -> {
+			redisTemplate.opsForList().leftPush(Constant.商户订单ID, merchantOrder.getId());
+		}, 1, TimeUnit.SECONDS);
+	}
+
+	/**
+	 * 生成订单返点
+	 * 
+	 * @param bettingOrder
+	 */
+	public void generateOrderRebate(MerchantOrder merchantOrder) {
+		UserAccount userAccount = merchantOrder.getUserAccount();
+		UserAccount superior = merchantOrder.getUserAccount().getInviter();
+		while (superior != null) {
+			double rebate = NumberUtil.round(superior.getRebate() - userAccount.getRebate(), 4).doubleValue();
+			if (rebate < 0) {
+				log.error("订单返点异常,下级账号的返点不能大于上级账号;下级账号id:{},上级账号id:{}", userAccount.getId(), superior.getId());
+				break;
+			}
+			double rebateAmount = NumberUtil.round(merchantOrder.getGatheringAmount() * rebate * 0.01, 4).doubleValue();
+			OrderRebate orderRebate = OrderRebate.build(rebate, rebateAmount, merchantOrder.getId(), superior.getId());
+			orderRebateRepo.save(orderRebate);
+			userAccount = superior;
+			superior = superior.getInviter();
+		}
+	}
+
+	@Transactional(readOnly = true)
+	public void orderRebateAutoSettlement() {
+		List<OrderRebate> orderRebates = orderRebateRepo.findBySettlementTimeIsNull();
+		for (OrderRebate orderRebate : orderRebates) {
+			redisTemplate.opsForList().leftPush(Constant.订单返点ID, orderRebate.getId());
+		}
+	}
+
+	/**
+	 * 通知指定的订单进行返点结算
+	 * 
+	 * @param issueId
+	 */
+	@Transactional(readOnly = true)
+	public void noticeOrderRebateSettlement(@NotBlank String orderId) {
+		List<OrderRebate> orderRebates = orderRebateRepo.findByMerchantOrderId(orderId);
+		for (OrderRebate orderRebate : orderRebates) {
+			redisTemplate.opsForList().leftPush(Constant.订单返点ID, orderRebate.getId());
+		}
+	}
+
+	/**
+	 * 订单返点结算
+	 */
+	@Transactional
+	public void orderRebateSettlement(@NotBlank String orderRebateId) {
+		OrderRebate orderRebate = orderRebateRepo.getOne(orderRebateId);
+		if (orderRebate.getSettlementTime() != null) {
+			log.warn("当前的订单返点记录已结算,无法重复结算;id:{}", orderRebateId);
+			return;
+		}
+		orderRebate.settlement();
+		orderRebateRepo.save(orderRebate);
+		UserAccount userAccount = orderRebate.getRebateAccount();
+		double cashDeposit = userAccount.getCashDeposit() + orderRebate.getRebateAmount();
+		userAccount.setCashDeposit(NumberUtil.round(cashDeposit, 4).doubleValue());
+		userAccountRepo.save(userAccount);
+		accountChangeLogRepo.save(AccountChangeLog.buildWithOrderRebate(userAccount, orderRebate));
 	}
 
 	@Transactional(readOnly = true)

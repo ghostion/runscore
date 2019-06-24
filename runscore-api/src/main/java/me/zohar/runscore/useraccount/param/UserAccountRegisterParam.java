@@ -49,6 +49,9 @@ public class UserAccountRegisterParam {
 		po.setState(Constant.账号状态_启用);
 		po.setAccountType(Constant.账号类型_会员);
 		po.setReceiveOrderState(Constant.接单状态_停止接单);
+		po.setCashDeposit(0d);
+		po.setAccountLevel(0);
+		po.setAccountLevelPath(po.getId());
 		return po;
 	}
 
