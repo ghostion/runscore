@@ -61,12 +61,13 @@ public class MasterControlService {
 
 	@Transactional
 	public void updateInviteRegisterSetting(
+			@NotNull @DecimalMin(value = "0", inclusive = false) Double regitserDefaultRebate,
 			@NotNull @DecimalMin(value = "0", inclusive = true) Integer effectiveDuration, @NotNull Boolean enabled) {
 		InviteRegisterSetting setting = inviteRegisterSettingRepo.findTopByOrderByEnabled();
 		if (setting == null) {
 			setting = InviteRegisterSetting.build();
 		}
-		setting.update(effectiveDuration, enabled);
+		setting.update(regitserDefaultRebate, effectiveDuration, enabled);
 		inviteRegisterSettingRepo.save(setting);
 	}
 
@@ -106,7 +107,7 @@ public class MasterControlService {
 		setting.update(orderEffectiveDuration, returnWaterRate, returnWaterRateEnabled);
 		rechargeSettingRepo.save(setting);
 	}
-	
+
 	@Transactional(readOnly = true)
 	public CustomerQrcodeSettingVO getCustomerQrcodeSetting() {
 		CustomerQrcodeSetting setting = customerQrcodeSettingRepo.findTopByOrderByLatelyUpdateTime();

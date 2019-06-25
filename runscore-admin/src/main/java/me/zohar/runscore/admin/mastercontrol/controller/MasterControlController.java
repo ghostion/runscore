@@ -36,8 +36,9 @@ public class MasterControlController {
 
 	@PostMapping("/updateInviteRegisterSetting")
 	@ResponseBody
-	public Result updateInviteRegisterSetting(Integer effectiveDuration, Boolean enabled) {
-		service.updateInviteRegisterSetting(effectiveDuration, enabled);
+	public Result updateInviteRegisterSetting(Double regitserDefaultRebate, Integer effectiveDuration,
+			Boolean enabled) {
+		service.updateInviteRegisterSetting(regitserDefaultRebate, effectiveDuration, enabled);
 		return Result.success();
 	}
 

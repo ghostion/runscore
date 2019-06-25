@@ -40,6 +40,8 @@ public class InviteRegisterSetting {
 	@Column(name = "id", length = 32)
 	private String id;
 
+	private Double regitserDefaultRebate;
+
 	/**
 	 * 邀请码有效时长
 	 */
@@ -55,7 +57,8 @@ public class InviteRegisterSetting {
 	 */
 	private Date latelyUpdateTime;
 
-	public void update(Integer effectiveDuration, Boolean enabled) {
+	public void update(Double regitserDefaultRebate, Integer effectiveDuration, Boolean enabled) {
+		this.setRegitserDefaultRebate(regitserDefaultRebate);
 		this.setEffectiveDuration(effectiveDuration);
 		this.setEnabled(enabled);
 		this.setLatelyUpdateTime(new Date());

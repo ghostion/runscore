@@ -18,21 +18,16 @@ public class PlatformOrderSettingVO {
 	 * 接单有效时长
 	 */
 	private Integer orderReceiveEffectiveDuration;
-	
+
 	/**
 	 * 支付有效时长
 	 */
 	private Integer orderPayEffectiveDuration;
 
 	/**
-	 * 接单返水率
+	 * 接单数量上限
 	 */
-	private Double returnWaterRate;
-
-	/**
-	 * 接单返水率启用标识
-	 */
-	private Boolean returnWaterRateEnabled;
+	private Integer receiveOrderUpperLimit;
 
 	private Boolean unfixedGatheringCodeReceiveOrder;
 

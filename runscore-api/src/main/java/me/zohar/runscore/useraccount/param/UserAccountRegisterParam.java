@@ -39,18 +39,24 @@ public class UserAccountRegisterParam {
 	@NotBlank
 	@Pattern(regexp = "^[A-Za-z][A-Za-z0-9]{5,14}$")
 	private String loginPwd;
+	
+	/**
+	 * 资金密码
+	 */
+	@NotBlank
+	@Pattern(regexp = "^[A-Za-z][A-Za-z0-9]{5,14}$")
+	private String moneyPwd;
 
 	public UserAccount convertToPo() {
 		UserAccount po = new UserAccount();
 		BeanUtils.copyProperties(this, po);
 		po.setId(IdUtils.getId());
 		po.setRegisteredTime(new Date());
-		po.setMoneyPwd(po.getLoginPwd());
 		po.setState(Constant.账号状态_启用);
 		po.setAccountType(Constant.账号类型_会员);
 		po.setReceiveOrderState(Constant.接单状态_停止接单);
 		po.setCashDeposit(0d);
-		po.setAccountLevel(0);
+		po.setAccountLevel(1);
 		po.setAccountLevelPath(po.getId());
 		return po;
 	}

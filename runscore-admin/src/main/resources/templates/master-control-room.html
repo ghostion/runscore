@@ -68,6 +68,11 @@
 					<div class="card-body">
 						<div class="row">
 							<div class="col-sm-12">
+								<label>注册默认返点</label> <span><input type="text" class="form-control-sm master-control-room-input" v-model="regitserDefaultRebate">%</span>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-sm-12">
 								<label>邀请码有效时长</label> <span><input type="text" class="form-control-sm master-control-room-input" v-model="inviteCodeEffectiveDuration">天</span>
 							</div>
 						</div>
@@ -100,10 +105,7 @@
 						</div>
 						<div class="row">
 							<div class="col-sm-12">
-								<label>接单返水率</label> <span><input type="text" class="form-control-sm master-control-room-input" v-model="receiveOrderReturnWaterRate">%</span>
-								<div class="custom-control custom-switch custom-control-inline">
-									<input type="checkbox" class="custom-control-input" id="receiveOrderReturnWaterRateEnabled" v-model="receiveOrderReturnWaterRateEnabled"> <label class="custom-control-label" for="receiveOrderReturnWaterRateEnabled">{{receiveOrderReturnWaterRateEnabled ? '启用' : '关闭'}}</label>
-								</div>
+								<label>接单数量上限</label> <span><input type="text" class="form-control-sm master-control-room-input" v-model="receiveOrderUpperLimit">单</span>
 							</div>
 						</div>
 						<div class="row">

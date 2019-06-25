@@ -12,6 +12,7 @@
 <script src="https://cdn.staticfile.org/vue-resource/1.5.1/vue-resource.min.js"></script>
 <link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
 <link href="/css/common/common.css" rel="stylesheet" type="text/css">
+<script src="/js/common/common.js"></script>
 <style type="text/css">
 .gathering-item {
 	
@@ -72,6 +73,11 @@
 							<label>奖励金</label> <span>{{todayReceiveOrderSituation != null ? todayReceiveOrderSituation.bounty : 0}}元</span>
 						</div>
 					</div>
+					<div class="row gathering-item" v-show="accountType == 'agent'">
+						<div class="col-sm-8 offset-sm-4">
+							<label>代理佣金</label> <span>{{todayReceiveOrderSituation != null ? todayReceiveOrderSituation.rebateAmount : 0}}元</span>
+						</div>
+					</div>
 				</div>
 			</div>
 			<div class="card" v-show="isLoggedInFlag && !showTodayReceiveOrderSituationFlag">
@@ -92,6 +98,11 @@
 					<div class="row gathering-item">
 						<div class="col-sm-8 offset-sm-4">
 							<label>奖励金</label> <span>{{totalReceiveOrderSituation != null ? totalReceiveOrderSituation.bounty : 0}}元</span>
+						</div>
+					</div>
+					<div class="row gathering-item" v-show="accountType == 'agent'">
+						<div class="col-sm-8 offset-sm-4">
+							<label>代理佣金</label> <span>{{totalReceiveOrderSituation != null ? totalReceiveOrderSituation.rebateAmount : 0}}元</span>
 						</div>
 					</div>
 				</div>
@@ -150,6 +161,7 @@
 			el : '#index',
 			data : {
 				isLoggedInFlag : false,
+				accountType : '',
 				showTodayReceiveOrderSituationFlag : false,
 				todayReceiveOrderSituation : {},
 				totalReceiveOrderSituation : {},
@@ -162,6 +174,10 @@
 			},
 			mounted : function() {
 				headerVM.title = '码王子';
+				var inviteCode = getQueryString('inviteCode');
+				if (inviteCode != null) {
+					window.sessionStorage.setItem('inviteCode', inviteCode);
+				}
 				this.getUserAccountInfo();
 				this.loadTodayTop10BountyRank();
 			},
@@ -223,6 +239,7 @@
 					that.$http.get('/userAccount/getUserAccountInfo').then(function(res) {
 						if (res.body.data != null) {
 							that.isLoggedInFlag = true;
+							that.accountType = res.body.data.accountType;
 							that.showTodayReceiveOrderSituation();
 						}
 					});

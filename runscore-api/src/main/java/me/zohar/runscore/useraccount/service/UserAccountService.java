@@ -244,15 +244,18 @@ public class UserAccountService {
 			throw new BizException(BizError.用户名已存在);
 		}
 		param.setLoginPwd(new BCryptPasswordEncoder().encode(param.getLoginPwd()));
+		param.setMoneyPwd(new BCryptPasswordEncoder().encode(param.getMoneyPwd()));
 		UserAccount newUserAccount = param.convertToPo();
 		InviteRegisterSetting setting = inviteRegisterSettingRepo.findTopByOrderByEnabled();
-		if (setting != null && setting.getEnabled()) {
+		if (setting.getEnabled()) {
 			InviteCode inviteCode = inviteCodeRepo
 					.findTopByCodeAndPeriodOfValidityGreaterThanEqual(param.getInviteCode(), new Date());
 			if (inviteCode == null) {
 				throw new BizException(BizError.邀请码不存在或已失效);
 			}
 			newUserAccount.updateInviteInfo(inviteCode);
+		} else {
+			newUserAccount.setRebate(setting.getRegitserDefaultRebate());
 		}
 		userAccountRepo.save(newUserAccount);
 	}

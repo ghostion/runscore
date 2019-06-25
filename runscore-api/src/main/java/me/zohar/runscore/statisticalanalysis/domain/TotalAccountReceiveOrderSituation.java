@@ -34,5 +34,7 @@ public class TotalAccountReceiveOrderSituation {
 	private Double bounty;
 
 	private Long paidOrderNum;
+	
+	private Double rebateAmount;
 
 }

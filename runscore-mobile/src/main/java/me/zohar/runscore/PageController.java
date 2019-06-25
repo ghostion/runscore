@@ -155,5 +155,15 @@ public class PageController {
 	public String agentOpenAnAccount() {
 		return "agent-open-an-account";
 	}
-
+	
+	/**
+	 * 下级开户
+	 * 
+	 * @return
+	 */
+	@GetMapping("/lower-level-open-an-account")
+	public String lowerLevelOpenAnAccount() {
+		return "lower-level-open-an-account";
+	}
+	
 }

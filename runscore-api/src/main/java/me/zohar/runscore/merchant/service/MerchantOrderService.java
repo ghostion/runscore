@@ -133,8 +133,8 @@ public class MerchantOrderService {
 			throw new BizException(BizError.商户订单不存在);
 		}
 		if (!order.getMerchantId().equals(merchant.getId())) {
-			log.error("无权更新商家订单状态为平台已确认支付;secretKey:{},orderId:{}", secretKey, orderId);
-			throw new BizException(BizError.无权更新平台订单状态为平台已确认支付);
+			log.error("无权更新商家订单状态为商户已确认支付;secretKey:{},orderId:{}", secretKey, orderId);
+			throw new BizException(BizError.无权更新商户订单状态为商户已确认支付);
 		}
 		if (!Constant.商户订单状态_已接单.equals(order.getOrderState())) {
 			throw new BizException(BizError.订单状态为已接单才能转为平台已确认支付);
@@ -218,13 +218,6 @@ public class MerchantOrderService {
 	 */
 	@Transactional
 	public void receiveOrderBountySettlement(MerchantOrder merchantOrder) {
-		PlatformOrderSetting setting = platformOrderSettingRepo.findTopByOrderByLatelyUpdateTime();
-		if (setting == null || !setting.getReturnWaterRateEnabled()) {
-			merchantOrder.updateBounty(0d);
-			merchantOrderRepo.save(merchantOrder);
-			return;
-		}
-
 		UserAccount userAccount = merchantOrder.getUserAccount();
 		double bounty = NumberUtil.round(merchantOrder.getGatheringAmount() * userAccount.getRebate() * 0.01, 4)
 				.doubleValue();
@@ -408,6 +401,8 @@ public class MerchantOrderService {
 		if (StrUtil.isBlank(gatheringCodeStorageId)) {
 			throw new BizException(BizError.无法接单找不到对应金额的收款码);
 		}
+		verifyAccountReceiveOrderUpperLimit(userAccountId);
+
 		UserAccount userAccount = userAccountRepo.getOne(userAccountId);
 		Double cashDeposit = NumberUtil.round(userAccount.getCashDeposit() - platformOrder.getGatheringAmount(), 4)
 				.doubleValue();
@@ -428,6 +423,23 @@ public class MerchantOrderService {
 				DateUtil.offset(platformOrder.getReceivedTime(), DateField.MINUTE, orderEffectiveDuration));
 		merchantOrderRepo.save(platformOrder);
 		accountChangeLogRepo.save(AccountChangeLog.buildWithReceiveOrderDeduction(userAccount, platformOrder));
+	}
+
+	/**
+	 * 校验用户是否达到接单上限,若达到上限,则不能接单
+	 * 
+	 * @param userAccountId
+	 */
+	@Transactional(readOnly = true)
+	public void verifyAccountReceiveOrderUpperLimit(@NotBlank String userAccountId) {
+		PlatformOrderSetting setting = platformOrderSettingRepo.findTopByOrderByLatelyUpdateTime();
+		if (setting == null || setting.getReceiveOrderUpperLimit() == null) {
+			return;
+		}
+		List<MyWaitConfirmOrderVO> waitConfirmOrders = findMyWaitConfirmOrder(userAccountId);
+		if (waitConfirmOrders.size() >= setting.getReceiveOrderUpperLimit()) {
+			throw new BizException(BizError.已达到接单数量上限);
+		}
 	}
 
 	@Transactional(readOnly = true)

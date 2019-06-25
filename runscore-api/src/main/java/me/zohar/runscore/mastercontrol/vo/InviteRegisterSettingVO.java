@@ -13,7 +13,9 @@ import me.zohar.runscore.mastercontrol.domain.InviteRegisterSetting;
 public class InviteRegisterSettingVO {
 
 	private String id;
-	
+
+	private Double regitserDefaultRebate;
+
 	/**
 	 * 邀请码有效时长
 	 */
@@ -23,13 +25,13 @@ public class InviteRegisterSettingVO {
 	 * 启用标识
 	 */
 	private Boolean enabled;
-	
+
 	/**
 	 * 最近修改时间
 	 */
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
 	private Date latelyUpdateTime;
-	
+
 	public static InviteRegisterSettingVO convertFor(InviteRegisterSetting inviteRegisterSetting) {
 		if (inviteRegisterSetting == null) {
 			return null;
