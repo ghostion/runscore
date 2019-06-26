@@ -16,7 +16,7 @@
 <link href="/css/common/common.css" rel="stylesheet" type="text/css">
 <style type="text/css">
 .register-container {
-	padding-top: 1rem;
+	padding-top: 2rem;
 	padding-bottom: 1rem;
 }
 </style>
@@ -46,9 +46,6 @@
 					<div class="form-group">
 						<label>资金密码:</label> <input type="password" class="form-control" placeholder="6-15位字母数字混合,且不能全为字母或数字!" v-model="moneyPwd">
 					</div>
-					<div class="form-group">
-						<label>确认资金密码:</label> <input type="password" class="form-control" placeholder="确认密码" v-model="confirmMoneyPwd">
-					</div>
 					<button type="button" class="btn btn-danger btn-lg btn-block" v-on:click="registerAndLogin">注册并登录</button>
 				</form>
 			</div>
@@ -66,8 +63,7 @@
 				realName : '',
 				loginPwd : '',
 				confirmLoginPwd : '',
-				moneyPwd : '',
-				confirmMoneyPwd : ''
+				moneyPwd : ''
 			},
 			computed : {},
 			created : function() {
@@ -132,14 +128,6 @@
 					}
 					if (that.moneyPwd == null || that.moneyPwd == '') {
 						layer.alert('请输入资金密码');
-						return;
-					}
-					if (that.confirmMoneyPwd == null || that.confirmMoneyPwd == '') {
-						layer.alert('请再次确认资金密码');
-						return;
-					}
-					if (that.moneyPwd != that.confirmMoneyPwd) {
-						layer.alert('资金密码不一致');
 						return;
 					}
 					if (!passwordPatt.test(that.moneyPwd)) {

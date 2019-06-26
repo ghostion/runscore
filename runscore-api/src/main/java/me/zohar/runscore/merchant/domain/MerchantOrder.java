@@ -10,6 +10,7 @@ import javax.persistence.ForeignKey;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Version;
 
@@ -124,6 +125,14 @@ public class MerchantOrder {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "received_account_id", updatable = false, insertable = false, foreignKey = @ForeignKey(value = ConstraintMode.NO_CONSTRAINT))
 	private UserAccount userAccount;
+
+	@Column(name = "pay_info_id", length = 32)
+	private String payInfoId;
+
+	@NotFound(action = NotFoundAction.IGNORE)
+	@OneToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "pay_info_id", updatable = false, insertable = false, foreignKey = @ForeignKey(value = ConstraintMode.NO_CONSTRAINT))
+	private MerchantOrderPayInfo payInfo;
 
 	public void updateBounty(Double bounty) {
 		this.setBounty(bounty);

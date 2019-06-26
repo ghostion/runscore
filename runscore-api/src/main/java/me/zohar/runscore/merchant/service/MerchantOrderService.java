@@ -1,5 +1,6 @@
 package me.zohar.runscore.merchant.service;
 
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -32,9 +33,13 @@ import com.zengtengpeng.annotation.Lock;
 
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.date.DateField;
+import cn.hutool.core.date.DatePattern;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.crypto.digest.DigestAlgorithm;
+import cn.hutool.crypto.digest.Digester;
+import cn.hutool.http.HttpUtil;
 import lombok.extern.slf4j.Slf4j;
 import me.zohar.runscore.common.exception.BizError;
 import me.zohar.runscore.common.exception.BizException;
@@ -42,15 +47,20 @@ import me.zohar.runscore.common.utils.ThreadPoolUtils;
 import me.zohar.runscore.common.valid.ParamValid;
 import me.zohar.runscore.common.vo.PageResult;
 import me.zohar.runscore.constants.Constant;
+import me.zohar.runscore.dictconfig.DictHolder;
+import me.zohar.runscore.dictconfig.vo.DictItemVO;
 import me.zohar.runscore.gatheringcode.domain.GatheringCode;
 import me.zohar.runscore.gatheringcode.repo.GatheringCodeRepo;
 import me.zohar.runscore.mastercontrol.domain.PlatformOrderSetting;
 import me.zohar.runscore.mastercontrol.repo.PlatformOrderSettingRepo;
 import me.zohar.runscore.merchant.domain.Merchant;
 import me.zohar.runscore.merchant.domain.MerchantOrder;
+import me.zohar.runscore.merchant.domain.MerchantOrderPayInfo;
 import me.zohar.runscore.merchant.domain.OrderRebate;
+import me.zohar.runscore.merchant.param.ManualStartOrderParam;
 import me.zohar.runscore.merchant.param.MerchantOrderQueryCondParam;
 import me.zohar.runscore.merchant.param.StartOrderParam;
+import me.zohar.runscore.merchant.repo.MerchantOrderPayInfoRepo;
 import me.zohar.runscore.merchant.repo.MerchantOrderRepo;
 import me.zohar.runscore.merchant.repo.MerchantRepo;
 import me.zohar.runscore.merchant.repo.OrderRebateRepo;
@@ -59,6 +69,7 @@ import me.zohar.runscore.merchant.vo.MerchantOrderVO;
 import me.zohar.runscore.merchant.vo.MyWaitConfirmOrderVO;
 import me.zohar.runscore.merchant.vo.MyWaitReceivingOrderVO;
 import me.zohar.runscore.merchant.vo.OrderGatheringCodeVO;
+import me.zohar.runscore.merchant.vo.StartOrderSuccessVO;
 import me.zohar.runscore.useraccount.domain.AccountChangeLog;
 import me.zohar.runscore.useraccount.domain.UserAccount;
 import me.zohar.runscore.useraccount.repo.AccountChangeLogRepo;
@@ -74,6 +85,9 @@ public class MerchantOrderService {
 
 	@Autowired
 	private MerchantOrderRepo merchantOrderRepo;
+
+	@Autowired
+	private MerchantOrderPayInfoRepo merchantOrderPayInfoRepo;
 
 	@Autowired
 	private MerchantRepo merchantRepo;
@@ -121,27 +135,28 @@ public class MerchantOrderService {
 		accountChangeLogRepo.save(AccountChangeLog.buildWithCustomerCancelOrderRefund(userAccount, merchantOrder));
 	}
 
-	@Transactional
-	public void merchantConfirmToPaid(@NotBlank String secretKey, @NotBlank String orderId) {
-		Merchant merchant = merchantRepo.findBySecretKey(secretKey);
-		if (merchant == null) {
-			throw new BizException(BizError.商户未接入);
-		}
-		MerchantOrder order = merchantOrderRepo.findById(orderId).orElse(null);
-		if (order == null) {
-			log.error("商家订单不存在;secretKey:{},orderId:{}", secretKey, orderId);
-			throw new BizException(BizError.商户订单不存在);
-		}
-		if (!order.getMerchantId().equals(merchant.getId())) {
-			log.error("无权更新商家订单状态为商户已确认支付;secretKey:{},orderId:{}", secretKey, orderId);
-			throw new BizException(BizError.无权更新商户订单状态为商户已确认支付);
-		}
-		if (!Constant.商户订单状态_已接单.equals(order.getOrderState())) {
-			throw new BizException(BizError.订单状态为已接单才能转为平台已确认支付);
-		}
-		order.merchantConfirmToPaid();
-		merchantOrderRepo.save(order);
-	}
+	// @Transactional
+	// public void merchantConfirmToPaid(@NotBlank String secretKey, @NotBlank
+	// String orderId) {
+	// Merchant merchant = merchantRepo.findByMerchantNum(secretKey);
+	// if (merchant == null) {
+	// throw new BizException(BizError.商户未接入);
+	// }
+	// MerchantOrder order = merchantOrderRepo.findById(orderId).orElse(null);
+	// if (order == null) {
+	// log.error("商家订单不存在;secretKey:{},orderId:{}", secretKey, orderId);
+	// throw new BizException(BizError.商户订单不存在);
+	// }
+	// if (!order.getMerchantId().equals(merchant.getId())) {
+	// log.error("无权更新商家订单状态为商户已确认支付;secretKey:{},orderId:{}", secretKey, orderId);
+	// throw new BizException(BizError.无权更新商户订单状态为商户已确认支付);
+	// }
+	// if (!Constant.商户订单状态_已接单.equals(order.getOrderState())) {
+	// throw new BizException(BizError.订单状态为已接单才能转为平台已确认支付);
+	// }
+	// order.merchantConfirmToPaid();
+	// merchantOrderRepo.save(order);
+	// }
 
 	@Transactional(readOnly = true)
 	public OrderGatheringCodeVO getOrderGatheringCode(@NotBlank String orderNo) {
@@ -228,7 +243,7 @@ public class MerchantOrderService {
 		accountChangeLogRepo
 				.save(AccountChangeLog.buildWithReceiveOrderBounty(userAccount, bounty, userAccount.getRebate()));
 		generateOrderRebate(merchantOrder);
-		ThreadPoolUtils.getOrderRebateSettlementPool().schedule(() -> {
+		ThreadPoolUtils.getPaidMerchantOrderPool().schedule(() -> {
 			redisTemplate.opsForList().leftPush(Constant.商户订单ID, merchantOrder.getId());
 		}, 1, TimeUnit.SECONDS);
 	}
@@ -359,21 +374,27 @@ public class MerchantOrderService {
 
 	@ParamValid
 	@Transactional
-	public MerchantOrderVO startOrder(StartOrderParam param) {
-		Merchant merchant = merchantRepo.findBySecretKey(param.getSecretKey());
+	public MerchantOrderVO manualStartOrder(ManualStartOrderParam param) {
+		Merchant merchant = merchantRepo.findByMerchantNum(param.getMerchantNum());
 		if (merchant == null) {
 			throw new BizException(BizError.商户未接入);
 		}
+		String sign = param.getMerchantNum() + param.getOrderNo() + String.valueOf(param.getGatheringAmount())
+				+ param.getNotifyUrl() + merchant.getSecretKey();
+		sign = new Digester(DigestAlgorithm.MD5).digestHex(sign);
+		param.setSign(sign);
 
 		Integer orderEffectiveDuration = Constant.商户订单接单有效时长;
 		PlatformOrderSetting setting = platformOrderSettingRepo.findTopByOrderByLatelyUpdateTime();
 		if (setting != null) {
 			orderEffectiveDuration = setting.getOrderReceiveEffectiveDuration();
 		}
-
-		MerchantOrder platformOrder = param.convertToPo(merchant.getId(), orderEffectiveDuration);
-		merchantOrderRepo.save(platformOrder);
-		return MerchantOrderVO.convertFor(platformOrder);
+		MerchantOrder merchantOrder = param.convertToPo(merchant.getId(), orderEffectiveDuration);
+		MerchantOrderPayInfo payInfo = param.convertToPayInfoPo(merchantOrder.getId());
+		merchantOrder.setPayInfoId(payInfo.getId());
+		merchantOrderRepo.save(merchantOrder);
+		merchantOrderPayInfoRepo.save(payInfo);
+		return MerchantOrderVO.convertFor(merchantOrder);
 	}
 
 	/**
@@ -540,6 +561,89 @@ public class MerchantOrderService {
 			order.setOrderState(Constant.商户订单状态_超时取消);
 			merchantOrderRepo.save(order);
 		}
+	}
+
+	@ParamValid
+	@Transactional
+	public StartOrderSuccessVO startOrder(StartOrderParam param) {
+		Merchant merchant = merchantRepo.findByMerchantNum(param.getMerchantNum());
+		if (merchant == null) {
+			throw new BizException(BizError.商户未接入);
+		}
+		boolean unknownPayTypeFlag = true;
+		List<DictItemVO> payTypes = DictHolder.findDictItem("gatheringChannel");
+		for (DictItemVO payType : payTypes) {
+			if (payType.getDictItemCode().equals(param.getPayType())) {
+				unknownPayTypeFlag = false;
+			}
+		}
+		if (unknownPayTypeFlag) {
+			throw new BizException(BizError.不支持该支付类型);
+		}
+		String sign = param.getMerchantNum() + param.getOrderNo() + String.valueOf(param.getAmount())
+				+ param.getNotifyUrl() + merchant.getSecretKey();
+		sign = new Digester(DigestAlgorithm.MD5).digestHex(sign);
+		if (!sign.equals(param.getSign())) {
+			throw new BizException(BizError.签名不正确);
+		}
+		Integer orderEffectiveDuration = Constant.商户订单接单有效时长;
+		PlatformOrderSetting setting = platformOrderSettingRepo.findTopByOrderByLatelyUpdateTime();
+		if (setting != null) {
+			orderEffectiveDuration = setting.getOrderReceiveEffectiveDuration();
+		}
+		MerchantOrder merchantOrder = param.convertToPo(merchant.getId(), orderEffectiveDuration);
+		MerchantOrderPayInfo payInfo = param.convertToPayInfoPo(merchantOrder.getId());
+		merchantOrder.setPayInfoId(payInfo.getId());
+		merchantOrderRepo.save(merchantOrder);
+		merchantOrderPayInfoRepo.save(payInfo);
+		return StartOrderSuccessVO.convertFor(merchantOrder.getOrderNo());
+	}
+
+	/**
+	 * 支付成功异步通知
+	 * 
+	 * @param merchantOrderId
+	 */
+	@Transactional
+	public void paySuccessAsynNotice(@NotBlank String merchantOrderId) {
+		MerchantOrderPayInfo payInfo = merchantOrderPayInfoRepo.findByMerchantOrderId(merchantOrderId);
+		if (Constant.商户订单支付通知状态_通知成功.equals(payInfo.getNoticeState())) {
+			log.warn("商户订单支付已通知成功,无需重复通知;商户订单id为{}", merchantOrderId);
+			return;
+		}
+		Merchant merchant = merchantRepo.findByMerchantNum(payInfo.getMerchantNum());
+		if (merchant == null) {
+			throw new BizException(BizError.商户未接入);
+		}
+
+		String sign = Constant.商户订单支付成功 + payInfo.getMerchantNum() + payInfo.getOrderNo()
+				+ String.valueOf(payInfo.getAmount()) + payInfo.getAttch() + merchant.getSecretKey();
+		sign = new Digester(DigestAlgorithm.MD5).digestHex(sign);
+		Map<String, Object> paramMap = new HashMap<>();
+		paramMap.put("merchantNum", payInfo.getMerchantNum());
+		paramMap.put("orderNo", payInfo.getOrderNo());
+		paramMap.put("platformOrderNo", payInfo.getMerchantOrder().getOrderNo());
+		paramMap.put("amount", payInfo.getAmount());
+		paramMap.put("attch", payInfo.getAttch());
+		paramMap.put("state", Constant.商户订单支付成功);
+		paramMap.put("payTime",
+				DateUtil.format(payInfo.getMerchantOrder().getConfirmTime(), DatePattern.NORM_DATETIME_PATTERN));
+		paramMap.put("sign", sign);
+		String result = "fail";
+		// 通知3次
+		for (int i = 0; i < 3; i++) {
+			try {
+				result = HttpUtil.get(payInfo.getNotifyUrl(), paramMap, 2500);
+				if (Constant.商户订单通知成功返回值.equals(result)) {
+					break;
+				}
+			} catch (Exception e) {
+				log.error(MessageFormat.format("商户订单支付成功异步通知地址请求异常,id为{0}", merchantOrderId), e);
+			}
+		}
+		payInfo.setNoticeState(
+				Constant.商户订单通知成功返回值.equals(result) ? Constant.商户订单支付通知状态_通知成功 : Constant.商户订单支付通知状态_通知失败);
+		merchantOrderPayInfoRepo.save(payInfo);
 	}
 
 }

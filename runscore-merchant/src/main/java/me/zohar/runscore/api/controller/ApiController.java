@@ -11,20 +11,18 @@ import me.zohar.runscore.common.vo.Result;
 import me.zohar.runscore.merchant.param.StartOrderParam;
 import me.zohar.runscore.merchant.service.MerchantOrderService;
 import me.zohar.runscore.merchant.vo.OrderGatheringCodeVO;
-import me.zohar.runscore.merchant.vo.MerchantOrderVO;
 
 @Controller
 @RequestMapping("/api")
 public class ApiController {
-	
+
 	@Autowired
 	private MerchantOrderService platformOrderService;
 
 	@PostMapping("/startOrder")
 	@ResponseBody
 	public Result startOrder(StartOrderParam param) {
-		MerchantOrderVO vo = platformOrderService.startOrder(param);
-		return Result.success().setData(vo);
+		return Result.success().setData(platformOrderService.startOrder(param));
 	}
 
 	@GetMapping("/getOrderGatheringCode")
@@ -33,13 +31,5 @@ public class ApiController {
 		OrderGatheringCodeVO vo = platformOrderService.getOrderGatheringCode(orderNo);
 		return Result.success().setData(vo);
 	}
-	
-	@GetMapping("/merchantConfirmToPaid")
-	@ResponseBody
-	public Result merchantConfirmToPaid(String secretKey, String orderId) {
-		platformOrderService.merchantConfirmToPaid(secretKey, orderId);
-		return Result.success();
-	}
-
 
 }

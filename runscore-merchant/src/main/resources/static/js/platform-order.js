@@ -15,6 +15,10 @@ var platformOrderVM = new Vue({
 		showAddOrderFlag : false,
 		gatheringChannelCodeWithAddOrder : '',
 		gatheringAmountWithAddOrder : '',
+		orderNoWithAddOrder : '',
+		notifyUrlWithAddOrder : '',
+		returnUrlWithAddOrder : '',
+		attchWithAddOrder : '',
 
 		showOrderDetailsFlag : false,
 		selectedOrderDetails : {},
@@ -177,6 +181,10 @@ var platformOrderVM = new Vue({
 			this.showAddOrderFlag = true;
 			this.gatheringChannelCodeWithAddOrder = '';
 			this.gatheringAmountWithAddOrder = '';
+			this.orderNoWithAddOrder = '';
+			this.notifyUrlWithAddOrder = '';
+			this.returnUrlWithAddOrder = '';
+			this.attchWithAddOrder = '';
 		},
 
 		addOrder : function() {
@@ -190,7 +198,31 @@ var platformOrderVM = new Vue({
 				return;
 			}
 			if (that.gatheringAmountWithAddOrder == null || that.gatheringAmountWithAddOrder == '') {
-				layer.alert('请选择收款金额', {
+				layer.alert('请输入收款金额', {
+					title : '提示',
+					icon : 7,
+					time : 3000
+				});
+				return;
+			}
+			if (that.orderNoWithAddOrder == null || that.orderNoWithAddOrder == '') {
+				layer.alert('请输入商户订单号', {
+					title : '提示',
+					icon : 7,
+					time : 3000
+				});
+				return;
+			}
+			if (that.notifyUrlWithAddOrder == null || that.notifyUrlWithAddOrder == '') {
+				layer.alert('请输入异步通知地址', {
+					title : '提示',
+					icon : 7,
+					time : 3000
+				});
+				return;
+			}
+			if (that.returnUrlWithAddOrder == null || that.returnUrlWithAddOrder == '') {
+				layer.alert('请输入同步通知地址', {
 					title : '提示',
 					icon : 7,
 					time : 3000
@@ -199,7 +231,11 @@ var platformOrderVM = new Vue({
 			}
 			that.$http.post('/merchantOrder/startOrder', {
 				gatheringChannelCode : that.gatheringChannelCodeWithAddOrder,
-				gatheringAmount : that.gatheringAmountWithAddOrder
+				gatheringAmount : that.gatheringAmountWithAddOrder,
+				orderNo : that.orderNoWithAddOrder,
+				notifyUrl : that.notifyUrlWithAddOrder,
+				returnUrl : that.returnUrlWithAddOrder,
+				attch : that.attchWithAddOrder
 			}, {
 				emulateJSON : true
 			}).then(function(res) {

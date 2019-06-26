@@ -10,9 +10,9 @@ public class ThreadPoolUtils {
 	private static ScheduledThreadPoolExecutor rechargeSettlementPool = new ScheduledThreadPoolExecutor(5);
 	
 	/**
-	 * 订单返点结算线程池
+	 * 已支付的商户订单线程池
 	 */
-	private static ScheduledThreadPoolExecutor orderRebateSettlementPool = new ScheduledThreadPoolExecutor(5);
+	private static ScheduledThreadPoolExecutor paidMerchantOrderPool = new ScheduledThreadPoolExecutor(9);
 
 
 	/**
@@ -24,8 +24,8 @@ public class ThreadPoolUtils {
 		return rechargeSettlementPool;
 	}
 	
-	public static ScheduledThreadPoolExecutor getOrderRebateSettlementPool() {
-		return orderRebateSettlementPool;
+	public static ScheduledThreadPoolExecutor getPaidMerchantOrderPool() {
+		return paidMerchantOrderPool;
 	}
 
 	public static ScheduledThreadPoolExecutor getLoginLogPool() {

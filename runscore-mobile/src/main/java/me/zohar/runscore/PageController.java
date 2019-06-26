@@ -155,7 +155,7 @@ public class PageController {
 	public String agentOpenAnAccount() {
 		return "agent-open-an-account";
 	}
-	
+
 	/**
 	 * 下级开户
 	 * 
@@ -166,4 +166,9 @@ public class PageController {
 		return "lower-level-open-an-account";
 	}
 	
+	@GetMapping("/paySuccessNotice")
+	public String paySuccessNotice() {
+		return "success";
+	}
+
 }

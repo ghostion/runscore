@@ -5,9 +5,9 @@ public class Constant {
 	public static final String 登录提示_登录成功 = "登录成功";
 
 	public static final String 登录提示_不是管理员无法登陆后台 = "该账号不是管理员,无法登陆到后台";
-	
+
 	public static final String 登录提示_不是商户无法登陆后台 = "该账号不是商户,无法登陆到后台";
-	
+
 	public static final String 登录提示_未开通商户资格无法登陆到商户端 = "该账号未开通商户资格,无法登陆到商户端";
 
 	public static final String 登录提示_用户名或密码不正确 = "用户名或密码不正确";
@@ -41,7 +41,7 @@ public class Constant {
 	public static final String 申诉处理方式_不做处理 = "4";
 
 	public static final String 申诉处理方式_商户撤销申诉 = "5";
-	
+
 	public static final String 申诉处理方式_确认已支付 = "6";
 
 	public static final String 接单状态_正在接单 = "1";
@@ -109,7 +109,7 @@ public class Constant {
 	public static final String 账变日志类型_改单为实际支付金额并退款 = "10";
 
 	public static final String 账变日志类型_客服取消订单并退款 = "11";
-	
+
 	public static final String 账变日志类型_奖励金返点 = "12";
 
 	public static final String 充提日志订单类型_充值 = "1";
@@ -129,9 +129,19 @@ public class Constant {
 	public static final Integer 商户订单接单有效时长 = 2;
 
 	public static final Integer 商户订单支付有效时长 = 5;
-	
+
 	public static final String 商户订单ID = "MERCHANT_ORDER_ID";
-	
+
 	public static final String 订单返点ID = "ORDER_REBATE_ID";
+
+	public static final String 商户订单支付通知状态_未通知 = "1";
+
+	public static final String 商户订单支付通知状态_通知成功 = "2";
+
+	public static final String 商户订单支付通知状态_通知失败 = "3";
+	
+	public static final String 商户订单支付成功 = "1";
+	
+	public static final String 商户订单通知成功返回值 = "success";
 
 }

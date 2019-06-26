@@ -53,10 +53,15 @@ public class OrderGatheringCodeVO {
 	 */
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
 	private Date usefulTime;
-	
+
 	private String gatheringCodeStorageId;
 
 	private String gatheringCodeUrl;
+
+	/**
+	 * 同步通知地址
+	 */
+	private String returnUrl;
 
 	public static OrderGatheringCodeVO convertFor(MerchantOrder platformOrder) {
 		if (platformOrder == null) {
@@ -66,6 +71,7 @@ public class OrderGatheringCodeVO {
 		BeanUtils.copyProperties(platformOrder, vo);
 		vo.setGatheringChannelName(DictHolder.getDictItemName("gatheringChannel", vo.getGatheringChannelCode()));
 		vo.setOrderStateName(DictHolder.getDictItemName("platformOrderState", vo.getOrderState()));
+		vo.setReturnUrl(platformOrder.getPayInfo().getReturnUrl());
 		return vo;
 	}
 

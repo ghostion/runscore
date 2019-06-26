@@ -40,6 +40,26 @@
 				<a href="{{platformOrderInfo.payUrl }}" target="_blank">{{platformOrderInfo.payUrl }}</a>
 				</div>
 		</div>
+		<div class="row">
+				<div class="col-sm-5 table-detail-item-label">商户订单号:</div>
+				<div class="col-sm-7 table-detail-item-value">{{platformOrderInfo.payInfo.orderNo }}</div>
+		</div>	
+		<div class="row">
+				<div class="col-sm-5 table-detail-item-label">异步通知地址:</div>
+				<div class="col-sm-7 table-detail-item-value">{{platformOrderInfo.payInfo.notifyUrl }}</div>
+		</div>	
+		<div class="row">
+				<div class="col-sm-5 table-detail-item-label">同步通知地址:</div>
+				<div class="col-sm-7 table-detail-item-value">{{platformOrderInfo.payInfo.returnUrl }}</div>
+		</div>	
+		<div class="row">
+				<div class="col-sm-5 table-detail-item-label">附加信息:</div>
+				<div class="col-sm-7 table-detail-item-value">{{platformOrderInfo.payInfo.attch }}</div>
+		</div>	
+		<div class="row">
+				<div class="col-sm-5 table-detail-item-label">通知时间:</div>
+				<div class="col-sm-7 table-detail-item-value">{{platformOrderInfo.payInfo.noticeTime }}</div>
+		</div>
 	</div>
 </script>
 <style type="text/css">

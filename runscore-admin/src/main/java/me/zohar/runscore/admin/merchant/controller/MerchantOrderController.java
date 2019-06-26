@@ -29,4 +29,11 @@ public class MerchantOrderController {
 		platformOrderService.cancelOrder(id);
 		return Result.success();
 	}
+
+	@GetMapping("/resendNotice")
+	@ResponseBody
+	public Result resendNotice(String id) {
+		platformOrderService.paySuccessAsynNotice(id);
+		return Result.success();
+	}
 }

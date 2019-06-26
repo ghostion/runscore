@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import me.zohar.runscore.common.vo.Result;
 import me.zohar.runscore.config.security.MerchantAccountDetails;
+import me.zohar.runscore.merchant.param.ManualStartOrderParam;
 import me.zohar.runscore.merchant.param.MerchantOrderQueryCondParam;
-import me.zohar.runscore.merchant.param.StartOrderParam;
 import me.zohar.runscore.merchant.service.MerchantOrderService;
 
 @Controller
@@ -47,11 +47,11 @@ public class MerchantOrderController {
 
 	@PostMapping("/startOrder")
 	@ResponseBody
-	public Result startOrder(StartOrderParam param) {
+	public Result startOrder(ManualStartOrderParam param) {
 		MerchantAccountDetails user = (MerchantAccountDetails) SecurityContextHolder.getContext().getAuthentication()
 				.getPrincipal();
-		param.setSecretKey(user.getSecretKey());
-		platformOrderService.startOrder(param);
+		param.setMerchantNum(user.getMerchantNum());
+		platformOrderService.manualStartOrder(param);
 		return Result.success();
 	}
 
