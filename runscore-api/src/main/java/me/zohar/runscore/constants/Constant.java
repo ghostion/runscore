@@ -61,6 +61,8 @@ public class Constant {
 	public static final String 商户订单状态_人工取消 = "6";
 
 	public static final String 商户订单状态_商户取消订单 = "7";
+	
+	public static final String 商户订单状态_申诉中 = "8";
 
 	public static final String 商户订单状态_客服取消订单退款 = "9";
 

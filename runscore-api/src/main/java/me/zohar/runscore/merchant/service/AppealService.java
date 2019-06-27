@@ -149,6 +149,9 @@ public class AppealService {
 		}
 		appeal.dontProcess();
 		appealRepo.save(appeal);
+		MerchantOrder merchantOrder = merchantOrderRepo.getOne(appeal.getMerchantOrderId());
+		merchantOrder.setOrderState(Constant.商户订单状态_已接单);
+		merchantOrderRepo.save(merchantOrder);
 	}
 
 	@Transactional
@@ -162,7 +165,7 @@ public class AppealService {
 		}
 		appeal.cancelOrder();
 		appealRepo.save(appeal);
-		merchantOrderService.customerCancelOrderRefund(appeal.getMerchantOrderId());
+		merchantOrderService.customerServiceCancelOrderRefund(appeal.getMerchantOrderId());
 	}
 
 	@Transactional
@@ -171,11 +174,11 @@ public class AppealService {
 		if (appeal == null) {
 			throw new BizException(BizError.参数异常);
 		}
-		if (!Constant.申诉类型_实际支付金额小于收款金额.equals(appeal.getAppealType())) {
-			throw new BizException(BizError.该申诉类型的处理方式不能是改为实际支付金额);
-		}
 		if (!Constant.申诉状态_待处理.equals(appeal.getState())) {
 			throw new BizException(BizError.当前申诉已完结无法更改处理方式);
+		}
+		if (!Constant.申诉类型_实际支付金额小于收款金额.equals(appeal.getAppealType())) {
+			throw new BizException(BizError.该申诉类型的处理方式不能是改为实际支付金额);
 		}
 
 		appeal.alterToActualPayAmount();
@@ -320,6 +323,14 @@ public class AppealService {
 	@ParamValid
 	@Transactional
 	public void userStartAppeal(String receivedAccountId, UserStartAppealParam param) {
+		MerchantOrder merchantOrder = merchantOrderRepo.findByIdAndReceivedAccountId(param.getMerchantOrderId(),
+				receivedAccountId);
+		if (merchantOrder == null) {
+			throw new BizException(BizError.商户订单不存在);
+		}
+		if (Constant.商户订单状态_申诉中.equals(merchantOrder.getOrderState())) {
+			throw new BizException(BizError.该订单存在未处理的申诉记录不能重复发起);
+		}
 		if (!Constant.申诉类型_未支付申请取消订单.equals(param.getAppealType())
 				&& !Constant.申诉类型_实际支付金额小于收款金额.equals(param.getAppealType())) {
 			throw new BizException(BizError.参数异常);
@@ -328,19 +339,16 @@ public class AppealService {
 			if (param.getActualPayAmount() == null || param.getActualPayAmount() <= 0) {
 				throw new BizException(BizError.参数异常);
 			}
+			if (merchantOrder.getGatheringAmount() - param.getActualPayAmount() < 0) {
+				throw new BizException(BizError.实际支付金额须小于收款金额);
+			}
 			if (StrUtil.isBlank(param.getUserSreenshotIds())) {
 				throw new BizException(BizError.参数异常);
 			}
 		}
-		MerchantOrder merchantOrder = merchantOrderRepo.findByIdAndReceivedAccountId(param.getMerchantOrderId(),
-				receivedAccountId);
-		if (merchantOrder == null) {
-			throw new BizException(BizError.商户订单不存在);
-		}
-		Appeal existAppeal = appealRepo.findByMerchantOrderIdAndState(param.getMerchantOrderId(), Constant.申诉状态_待处理);
-		if (existAppeal != null) {
-			throw new BizException(BizError.该订单存在未处理的申诉记录不能重复发起);
-		}
+
+		merchantOrder.setOrderState(Constant.商户订单状态_申诉中);
+		merchantOrderRepo.save(merchantOrder);
 		Appeal appeal = param.convertToPo();
 		appealRepo.save(appeal);
 		if (StrUtil.isNotBlank(param.getUserSreenshotIds())) {
@@ -356,6 +364,13 @@ public class AppealService {
 	@ParamValid
 	@Transactional
 	public void merchantStartAppeal(String merchantId, MerchantStartAppealParam param) {
+		MerchantOrder merchantOrder = merchantOrderRepo.findByIdAndMerchantId(param.getMerchantOrderId(), merchantId);
+		if (merchantOrder == null) {
+			throw new BizException(BizError.商户订单不存在);
+		}
+		if (Constant.商户订单状态_申诉中.equals(merchantOrder.getOrderState())) {
+			throw new BizException(BizError.该订单存在未处理的申诉记录不能重复发起);
+		}
 		if (!Constant.申诉类型_已支付用户未进行确认.equals(param.getAppealType())
 				&& !Constant.申诉类型_实际支付金额小于收款金额.equals(param.getAppealType())) {
 			throw new BizException(BizError.参数异常);
@@ -364,18 +379,16 @@ public class AppealService {
 			if (param.getActualPayAmount() == null || param.getActualPayAmount() <= 0) {
 				throw new BizException(BizError.参数异常);
 			}
+			if (merchantOrder.getGatheringAmount() - param.getActualPayAmount() < 0) {
+				throw new BizException(BizError.实际支付金额须小于收款金额);
+			}
 			if (StrUtil.isBlank(param.getMerchantSreenshotIds())) {
 				throw new BizException(BizError.参数异常);
 			}
 		}
-		MerchantOrder merchantOrder = merchantOrderRepo.findByIdAndMerchantId(param.getMerchantOrderId(), merchantId);
-		if (merchantOrder == null) {
-			throw new BizException(BizError.商户订单不存在);
-		}
-		Appeal existAppeal = appealRepo.findByMerchantOrderIdAndState(param.getMerchantOrderId(), Constant.申诉状态_待处理);
-		if (existAppeal != null) {
-			throw new BizException(BizError.该订单存在未处理的申诉记录不能重复发起);
-		}
+
+		merchantOrder.setOrderState(Constant.商户订单状态_申诉中);
+		merchantOrderRepo.save(merchantOrder);
 		Appeal appeal = param.convertToPo();
 		appealRepo.save(appeal);
 		if (StrUtil.isNotBlank(param.getMerchantSreenshotIds())) {

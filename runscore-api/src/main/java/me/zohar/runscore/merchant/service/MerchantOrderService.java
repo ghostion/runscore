@@ -119,11 +119,10 @@ public class MerchantOrderService {
 	 * @param orderId
 	 */
 	@Transactional
-	public void customerCancelOrderRefund(@NotBlank String orderId) {
+	public void customerServiceCancelOrderRefund(@NotBlank String orderId) {
 		MerchantOrder merchantOrder = merchantOrderRepo.getOne(orderId);
-		if (!(Constant.商户订单状态_已接单.equals(merchantOrder.getOrderState())
-				|| Constant.商户订单状态_商户已确认支付.equals(merchantOrder.getOrderState()))) {
-			throw new BizException(BizError.只有已接单商户确认已支付的商户订单才能取消订单退款);
+		if (!(Constant.商户订单状态_申诉中.equals(merchantOrder.getOrderState()))) {
+			throw new BizException(BizError.只有申诉中的商户订单才能取消订单退款);
 		}
 		UserAccount userAccount = merchantOrder.getUserAccount();
 		Double cashDeposit = NumberUtil.round(userAccount.getCashDeposit() + merchantOrder.getGatheringAmount(), 4)
@@ -200,7 +199,13 @@ public class MerchantOrderService {
 		if (platformOrder == null) {
 			throw new BizException(BizError.商户订单不存在);
 		}
-		confirmToPaidInner(orderId, null);
+		if (!(Constant.商户订单状态_已接单.equals(platformOrder.getOrderState())
+				|| Constant.商户订单状态_商户已确认支付.equals(platformOrder.getOrderState()))) {
+			throw new BizException(BizError.订单状态为已接单或平台已确认支付才能转为确认已支付);
+		}
+		platformOrder.confirmToPaid(null);
+		merchantOrderRepo.save(platformOrder);
+		receiveOrderBountySettlement(platformOrder);
 	}
 
 	/**
@@ -210,18 +215,12 @@ public class MerchantOrderService {
 	 */
 	@Transactional
 	public void customerServiceConfirmToPaid(@NotBlank String orderId, String note) {
-		confirmToPaidInner(orderId, note);
-	}
-
-	@Transactional
-	public void confirmToPaidInner(@NotBlank String orderId, String note) {
 		MerchantOrder platformOrder = merchantOrderRepo.findById(orderId).orElse(null);
 		if (platformOrder == null) {
 			throw new BizException(BizError.商户订单不存在);
 		}
-		if (!(Constant.商户订单状态_已接单.equals(platformOrder.getOrderState())
-				|| Constant.商户订单状态_商户已确认支付.equals(platformOrder.getOrderState()))) {
-			throw new BizException(BizError.订单状态为已接单或平台已确认支付才能转为确认已支付);
+		if (!Constant.商户订单状态_申诉中.equals(platformOrder.getOrderState())) {
+			throw new BizException(BizError.订单状态为申述中才能转为确认已支付);
 		}
 		platformOrder.confirmToPaid(note);
 		merchantOrderRepo.save(platformOrder);
@@ -605,11 +604,11 @@ public class MerchantOrderService {
 	 * @param merchantOrderId
 	 */
 	@Transactional
-	public void paySuccessAsynNotice(@NotBlank String merchantOrderId) {
+	public String paySuccessAsynNotice(@NotBlank String merchantOrderId) {
 		MerchantOrderPayInfo payInfo = merchantOrderPayInfoRepo.findByMerchantOrderId(merchantOrderId);
 		if (Constant.商户订单支付通知状态_通知成功.equals(payInfo.getNoticeState())) {
 			log.warn("商户订单支付已通知成功,无需重复通知;商户订单id为{}", merchantOrderId);
-			return;
+			return Constant.商户订单通知成功返回值;
 		}
 		Merchant merchant = merchantRepo.findByMerchantNum(payInfo.getMerchantNum());
 		if (merchant == null) {
@@ -638,12 +637,14 @@ public class MerchantOrderService {
 					break;
 				}
 			} catch (Exception e) {
+				result = e.getMessage();
 				log.error(MessageFormat.format("商户订单支付成功异步通知地址请求异常,id为{0}", merchantOrderId), e);
 			}
 		}
 		payInfo.setNoticeState(
 				Constant.商户订单通知成功返回值.equals(result) ? Constant.商户订单支付通知状态_通知成功 : Constant.商户订单支付通知状态_通知失败);
 		merchantOrderPayInfoRepo.save(payInfo);
+		return result;
 	}
 
 }

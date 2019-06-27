@@ -2,6 +2,7 @@ package me.zohar.runscore;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller
 public class PageController {
@@ -125,6 +126,16 @@ public class PageController {
 	public String appealRecord() {
 		return "appeal-record";
 	}
+	
+	/**
+	 * 申诉详情
+	 * 
+	 * @return
+	 */
+	@GetMapping("/appeal-details")
+	public String appealDetails() {
+		return "appeal-details";
+	}
 
 	/**
 	 * 在线客服
@@ -166,6 +177,7 @@ public class PageController {
 		return "lower-level-open-an-account";
 	}
 	
+	@ResponseBody
 	@GetMapping("/paySuccessNotice")
 	public String paySuccessNotice() {
 		return "success";

@@ -55,4 +55,9 @@ public class MerchantOrderController {
 		return Result.success();
 	}
 
+	@GetMapping("/resendNotice")
+	@ResponseBody
+	public Result resendNotice(String id) {
+		return Result.success().setData(platformOrderService.paySuccessAsynNotice(id));
+	}
 }

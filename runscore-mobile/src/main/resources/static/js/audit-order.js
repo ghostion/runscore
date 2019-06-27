@@ -75,6 +75,7 @@ var auditOrderVM = new Vue({
 		showWaitConfirmOrderPage : function() {
 			headerVM.title = '审核订单';
 			this.showWaitConfirmOrderFlag = true;
+			this.loadPlatformOrder();
 		},
 
 		initFileUploadWidget : function(storageId) {
@@ -122,6 +123,14 @@ var auditOrderVM = new Vue({
 			if (that.appealType == '2') {
 				if (that.actualPayAmount == null || that.actualPayAmount == '') {
 					layer.alert('请输入实际支付金额', {
+						title : '提示',
+						icon : 7,
+						time : 3000
+					});
+					return;
+				}
+				if (that.selectedOrder.gatheringAmount < that.actualPayAmount) {
+					layer.alert('实际支付金额须小于收款金额', {
 						title : '提示',
 						icon : 7,
 						time : 3000

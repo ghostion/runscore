@@ -185,7 +185,7 @@ var platformOrderVM = new Vue({
 
 		resendNotice : function(id) {
 			var that = this;
-			layer.load(1, {
+			layer.load(0, {
 				time : 8000,
 				shade : [ 0.1, '#fff' ]
 			});
@@ -195,12 +195,18 @@ var platformOrderVM = new Vue({
 				}
 			}).then(function(res) {
 				layer.closeAll('loading');
-				layer.alert('操作成功!', {
-					icon : 1,
-					time : 3000,
-					shade : false
-				});
 				that.refreshTable();
+				var result = res.body.data;
+				if (result == null || result == '') {
+					result = '无内容';
+				}
+				layer.open({
+					type : 1,
+					anim : 2,
+					shadeClose : true,
+					area : [ '420px', '240px' ],
+					content : '<div style="padding: 10px;">' + '<p>返回内容</p>' + '<div style="color: red;">' + result + '</div>' + '</div>'
+				});
 			});
 		},
 
