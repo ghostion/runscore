@@ -50,7 +50,7 @@ public class MyReceiveOrderRecordVO {
 	 */
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
 	private Date receivedTime;
-	
+
 	/**
 	 * 奖励金
 	 */
@@ -67,12 +67,12 @@ public class MyReceiveOrderRecordVO {
 		return vos;
 	}
 
-	public static MyReceiveOrderRecordVO convertFor(MerchantOrder platformOrder) {
-		if (platformOrder == null) {
+	public static MyReceiveOrderRecordVO convertFor(MerchantOrder merchantOrder) {
+		if (merchantOrder == null) {
 			return null;
 		}
 		MyReceiveOrderRecordVO vo = new MyReceiveOrderRecordVO();
-		BeanUtils.copyProperties(platformOrder, vo);
+		BeanUtils.copyProperties(merchantOrder, vo);
 		vo.setGatheringChannelName(DictHolder.getDictItemName("gatheringChannel", vo.getGatheringChannelCode()));
 		vo.setOrderStateName(DictHolder.getDictItemName("platformOrderState", vo.getOrderState()));
 		return vo;

@@ -59,6 +59,7 @@ import me.zohar.runscore.merchant.domain.MerchantOrderPayInfo;
 import me.zohar.runscore.merchant.domain.OrderRebate;
 import me.zohar.runscore.merchant.param.ManualStartOrderParam;
 import me.zohar.runscore.merchant.param.MerchantOrderQueryCondParam;
+import me.zohar.runscore.merchant.param.MyReceiveOrderRecordQueryCondParam;
 import me.zohar.runscore.merchant.param.StartOrderParam;
 import me.zohar.runscore.merchant.repo.MerchantOrderPayInfoRepo;
 import me.zohar.runscore.merchant.repo.MerchantOrderRepo;
@@ -66,6 +67,7 @@ import me.zohar.runscore.merchant.repo.MerchantRepo;
 import me.zohar.runscore.merchant.repo.OrderRebateRepo;
 import me.zohar.runscore.merchant.vo.MerchantOrderDetailsVO;
 import me.zohar.runscore.merchant.vo.MerchantOrderVO;
+import me.zohar.runscore.merchant.vo.MyReceiveOrderRecordVO;
 import me.zohar.runscore.merchant.vo.MyWaitConfirmOrderVO;
 import me.zohar.runscore.merchant.vo.MyWaitReceivingOrderVO;
 import me.zohar.runscore.merchant.vo.OrderGatheringCodeVO;
@@ -513,6 +515,40 @@ public class MerchantOrderService {
 				PageRequest.of(param.getPageNum() - 1, param.getPageSize(), Sort.by(Sort.Order.desc("submitTime"))));
 		PageResult<MerchantOrderVO> pageResult = new PageResult<>(MerchantOrderVO.convertFor(result.getContent()),
 				param.getPageNum(), param.getPageSize(), result.getTotalElements());
+		return pageResult;
+	}
+
+	@Transactional(readOnly = true)
+	public PageResult<MyReceiveOrderRecordVO> findMyReceiveOrderRecordByPage(MyReceiveOrderRecordQueryCondParam param) {
+		Specification<MerchantOrder> spec = new Specification<MerchantOrder>() {
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
+			public Predicate toPredicate(Root<MerchantOrder> root, CriteriaQuery<?> query, CriteriaBuilder builder) {
+				List<Predicate> predicates = new ArrayList<Predicate>();
+				if (StrUtil.isNotBlank(param.getGatheringChannelCode())) {
+					predicates.add(builder.equal(root.get("gatheringChannelCode"), param.getGatheringChannelCode()));
+				}
+				if (StrUtil.isNotBlank(param.getReceiverUserName())) {
+					predicates.add(builder.equal(root.join("userAccount", JoinType.INNER).get("userName"),
+							param.getReceiverUserName()));
+				}
+				if (param.getReceiveOrderTime() != null) {
+					predicates.add(builder.greaterThanOrEqualTo(root.get("receivedTime").as(Date.class),
+							DateUtil.beginOfDay(param.getReceiveOrderTime())));
+					predicates.add(builder.lessThanOrEqualTo(root.get("receivedTime").as(Date.class),
+							DateUtil.endOfDay(param.getReceiveOrderTime())));
+				}
+				return predicates.size() > 0 ? builder.and(predicates.toArray(new Predicate[predicates.size()])) : null;
+			}
+		};
+		Page<MerchantOrder> result = merchantOrderRepo.findAll(spec,
+				PageRequest.of(param.getPageNum() - 1, param.getPageSize(), Sort.by(Sort.Order.desc("submitTime"))));
+		PageResult<MyReceiveOrderRecordVO> pageResult = new PageResult<>(
+				MyReceiveOrderRecordVO.convertFor(result.getContent()), param.getPageNum(), param.getPageSize(),
+				result.getTotalElements());
 		return pageResult;
 	}
 

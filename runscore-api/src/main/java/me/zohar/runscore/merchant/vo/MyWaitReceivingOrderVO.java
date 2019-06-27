@@ -44,13 +44,6 @@ public class MyWaitReceivingOrderVO {
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
 	private Date submitTime;
 
-	/**
-	 * 订单状态
-	 */
-	private String orderState;
-
-	private String orderStateName;
-
 	public static List<MyWaitReceivingOrderVO> convertFor(List<MerchantOrder> platformOrders) {
 		if (CollectionUtil.isEmpty(platformOrders)) {
 			return new ArrayList<>();
@@ -69,7 +62,6 @@ public class MyWaitReceivingOrderVO {
 		MyWaitReceivingOrderVO vo = new MyWaitReceivingOrderVO();
 		BeanUtils.copyProperties(platformOrder, vo);
 		vo.setGatheringChannelName(DictHolder.getDictItemName("gatheringChannel", vo.getGatheringChannelCode()));
-		vo.setOrderStateName(DictHolder.getDictItemName("platformOrderState", vo.getOrderState()));
 		return vo;
 	}
 

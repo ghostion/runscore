@@ -17,27 +17,33 @@ public class AppealController {
 	@Autowired
 	private AppealService appealService;
 
+	@GetMapping("/findTop5TodoAppealByPage")
+	@ResponseBody
+	public Result findTop5TodoAppealByPage() {
+		return Result.success().setData(appealService.findTop5TodoAppealByPage());
+	}
+
 	@GetMapping("/dontProcess")
 	@ResponseBody
 	public Result dontProcess(String appealId) {
 		appealService.dontProcess(appealId);
 		return Result.success();
 	}
-	
+
 	@GetMapping("/cancelOrder")
 	@ResponseBody
 	public Result cancelOrder(String appealId) {
 		appealService.cancelOrder(appealId);
 		return Result.success();
 	}
-	
+
 	@GetMapping("/alterToActualPayAmount")
 	@ResponseBody
 	public Result alterToActualPayAmount(String appealId) {
 		appealService.alterToActualPayAmount(appealId);
 		return Result.success();
 	}
-	
+
 	@GetMapping("/confirmToPaid")
 	@ResponseBody
 	public Result confirmToPaid(String appealId) {
@@ -49,6 +55,12 @@ public class AppealController {
 	@ResponseBody
 	public Result findAppealByPage(AppealQueryCondParam param) {
 		return Result.success().setData(appealService.findAppealByPage(param));
+	}
+	
+	@GetMapping("/findAppealDetailsById")
+	@ResponseBody
+	public Result findAppealDetailsById(String id) {
+		return Result.success().setData(appealService.findAppealDetailsById(id));
 	}
 
 }

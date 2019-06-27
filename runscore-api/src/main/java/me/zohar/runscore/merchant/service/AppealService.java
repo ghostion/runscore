@@ -65,6 +65,27 @@ public class AppealService {
 	@Autowired
 	private AccountChangeLogRepo accountChangeLogRepo;
 
+	@Transactional(readOnly = true)
+	public PageResult<AppealVO> findTop5TodoAppealByPage() {
+		Specification<Appeal> spec = new Specification<Appeal>() {
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
+			public Predicate toPredicate(Root<Appeal> root, CriteriaQuery<?> query, CriteriaBuilder builder) {
+				List<Predicate> predicates = new ArrayList<Predicate>();
+				predicates.add(builder.equal(root.get("state"), Constant.申诉状态_待处理));
+				return predicates.size() > 0 ? builder.and(predicates.toArray(new Predicate[predicates.size()])) : null;
+			}
+		};
+		Page<Appeal> result = appealRepo.findAll(spec,
+				PageRequest.of(0, 5, Sort.by(Sort.Order.desc("initiationTime"))));
+		PageResult<AppealVO> pageResult = new PageResult<>(AppealVO.convertFor(result.getContent()), 1, 5,
+				result.getTotalElements());
+		return pageResult;
+	}
+
 	@Transactional
 	public void userUploadSreenshot(@NotBlank String receivedAccountId, @NotBlank String appealId,
 			@NotBlank String userSreenshotIds) {
@@ -212,6 +233,11 @@ public class AppealService {
 	}
 
 	@Transactional(readOnly = true)
+	public AppealVO findAppealDetailsById(@NotBlank String id) {
+		return AppealVO.convertFor(appealRepo.getOne(id));
+	}
+
+	@Transactional(readOnly = true)
 	public PageResult<AppealVO> findAppealByPage(AppealQueryCondParam param) {
 		Specification<Appeal> spec = new Specification<Appeal>() {
 			/**
@@ -290,6 +316,8 @@ public class AppealService {
 		if (StrUtil.isNotBlank(appeal.getMerchantSreenshotIds())) {
 			throw new BizException(BizError.商户已提供截图无法撤销申诉);
 		}
+		merchantOrder.setOrderState(Constant.商户订单状态_已接单);
+		merchantOrderRepo.save(merchantOrder);
 		appeal.userCancelAppeal();
 		appealRepo.save(appeal);
 	}
@@ -316,6 +344,8 @@ public class AppealService {
 		if (StrUtil.isNotBlank(appeal.getUserSreenshotIds())) {
 			throw new BizException(BizError.用户已提供截图无法撤销申诉);
 		}
+		merchantOrder.setOrderState(Constant.商户订单状态_已接单);
+		merchantOrderRepo.save(merchantOrder);
 		appeal.merchantCancelAppeal();
 		appealRepo.save(appeal);
 	}

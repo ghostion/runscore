@@ -151,6 +151,11 @@ public class PageController {
 		return "appeal-record";
 	}
 	
+	@GetMapping("/appeal-details")
+	public String appealDetails() {
+		return "appeal-details";
+	}
+	
 	@GetMapping("/pay-channel")
 	public String payChannel() {
 		return "pay-channel";

@@ -150,8 +150,7 @@
 							pageSize : 5,
 							pageNum : that.pageNum,
 							gatheringChannelCode : that.gatheringChannelCode,
-							receiveOrderStartTime : that.receiveOrderTime,
-							receiveOrderEndTime : that.receiveOrderEndTime
+							receiveOrderTime : that.receiveOrderTime
 						}
 					}).then(function(res) {
 						that.myReceiveOrderRecords = res.body.data.content;
