@@ -205,7 +205,7 @@ public class AppealService {
 		appeal.alterToActualPayAmount();
 		appealRepo.save(appeal);
 		MerchantOrder merchantOrder = appeal.getMerchantOrder();
-		UserAccount userAccount = merchantOrder.getUserAccount();
+		UserAccount userAccount = merchantOrder.getReceivedAccount();
 		Double refundAmount = merchantOrder.getGatheringAmount() - appeal.getActualPayAmount();
 		Double cashDeposit = NumberUtil.round(userAccount.getCashDeposit() + refundAmount, 4).doubleValue();
 		userAccount.setCashDeposit(cashDeposit);

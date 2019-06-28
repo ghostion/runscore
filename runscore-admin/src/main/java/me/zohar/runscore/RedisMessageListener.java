@@ -31,8 +31,8 @@ public class RedisMessageListener {
 
 	@PostConstruct
 	public void init() {
-		//listenRechargeSettlement();
-		//listenPaidMerchantOrder();
+		listenRechargeSettlement();
+		listenPaidMerchantOrder();
 	}
 
 	public void listenRechargeSettlement() {

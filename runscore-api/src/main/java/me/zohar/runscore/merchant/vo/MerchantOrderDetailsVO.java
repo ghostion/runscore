@@ -116,8 +116,8 @@ public class MerchantOrderDetailsVO {
 		if (merchantOrder.getMerchant() != null) {
 			vo.setPlatformName(merchantOrder.getMerchant().getName());
 		}
-		if (StrUtil.isNotBlank(vo.getReceivedAccountId()) && merchantOrder.getUserAccount() != null) {
-			vo.setReceiverUserName(merchantOrder.getUserAccount().getUserName());
+		if (StrUtil.isNotBlank(vo.getReceivedAccountId()) && merchantOrder.getReceivedAccount() != null) {
+			vo.setReceiverUserName(merchantOrder.getReceivedAccount().getUserName());
 		}
 		return vo;
 	}

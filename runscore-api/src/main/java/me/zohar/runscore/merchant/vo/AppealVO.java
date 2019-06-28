@@ -120,8 +120,8 @@ public class AppealVO {
 			}
 
 			if (StrUtil.isNotBlank(appeal.getMerchantOrder().getReceivedAccountId())
-					&& appeal.getMerchantOrder().getUserAccount() != null) {
-				vo.setReceiverUserName(appeal.getMerchantOrder().getUserAccount().getUserName());
+					&& appeal.getMerchantOrder().getReceivedAccount() != null) {
+				vo.setReceiverUserName(appeal.getMerchantOrder().getReceivedAccount().getUserName());
 			}
 			vo.setReceivedTime(appeal.getMerchantOrder().getReceivedTime());
 		}

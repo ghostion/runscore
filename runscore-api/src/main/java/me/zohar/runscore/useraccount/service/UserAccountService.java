@@ -6,6 +6,7 @@ import java.util.List;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.validation.constraints.NotBlank;
@@ -39,6 +40,8 @@ import me.zohar.runscore.useraccount.param.AccountChangeLogQueryCondParam;
 import me.zohar.runscore.useraccount.param.AddUserAccountParam;
 import me.zohar.runscore.useraccount.param.AdjustCashDepositParam;
 import me.zohar.runscore.useraccount.param.BindBankInfoParam;
+import me.zohar.runscore.useraccount.param.LowerLevelAccountChangeLogQueryCondParam;
+import me.zohar.runscore.useraccount.param.LowerLevelAccountQueryCondParam;
 import me.zohar.runscore.useraccount.param.ModifyLoginPwdParam;
 import me.zohar.runscore.useraccount.param.ModifyMoneyPwdParam;
 import me.zohar.runscore.useraccount.param.UserAccountEditParam;
@@ -321,6 +324,104 @@ public class UserAccountService {
 			accountChangeLogRepo.save(
 					AccountChangeLog.buildWithHandworkAdjustCashDeposit(userAccount, -param.getAccountChangeAmount()));
 		}
+	}
+
+	@ParamValid
+	@Transactional(readOnly = true)
+	public PageResult<UserAccountDetailsInfoVO> findLowerLevelAccountDetailsInfoByPage(
+			LowerLevelAccountQueryCondParam param) {
+		UserAccount currentAccount = userAccountRepo.getOne(param.getCurrentAccountId());
+		UserAccount lowerLevelAccount = currentAccount;
+		if (StrUtil.isNotBlank(param.getUserName())) {
+			lowerLevelAccount = userAccountRepo.findByUserName(param.getUserName());
+			if (lowerLevelAccount == null) {
+				throw new BizException(BizError.用户名不存在);
+			}
+			// 说明该用户名对应的账号不是当前账号的下级账号
+			if (!lowerLevelAccount.getAccountLevelPath().startsWith(currentAccount.getAccountLevelPath())) {
+				throw new BizException(BizError.不是上级账号无权查看该账号及下级的账号信息);
+			}
+		}
+		String lowerLevelAccountId = lowerLevelAccount.getId();
+		String lowerLevelAccountLevelPath = lowerLevelAccount.getAccountLevelPath();
+
+		Specification<UserAccount> spec = new Specification<UserAccount>() {
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
+			public Predicate toPredicate(Root<UserAccount> root, CriteriaQuery<?> query, CriteriaBuilder builder) {
+				List<Predicate> predicates = new ArrayList<Predicate>();
+				if (Constant.下级账号查询范围_指定账号及直接下级.equals(param.getQueryScope())) {
+					Predicate predicate1 = builder.equal(root.get("id"), lowerLevelAccountId);
+					Predicate predicate2 = builder.equal(root.get("inviterId"), lowerLevelAccountId);
+					predicates.add(builder.or(predicate1, predicate2));
+				} else {
+					predicates.add(builder.like(root.get("accountLevelPath"), lowerLevelAccountLevelPath + "%"));
+				}
+				return predicates.size() > 0 ? builder.and(predicates.toArray(new Predicate[predicates.size()])) : null;
+			}
+		};
+		Page<UserAccount> result = userAccountRepo.findAll(spec,
+				PageRequest.of(param.getPageNum() - 1, param.getPageSize(), Sort.by(Sort.Order.asc("registeredTime"))));
+		PageResult<UserAccountDetailsInfoVO> pageResult = new PageResult<>(
+				UserAccountDetailsInfoVO.convertFor(result.getContent()), param.getPageNum(), param.getPageSize(),
+				result.getTotalElements());
+		return pageResult;
+	}
+
+	@Transactional(readOnly = true)
+	public PageResult<AccountChangeLogVO> findLowerLevelAccountChangeLogByPage(
+			LowerLevelAccountChangeLogQueryCondParam param) {
+		UserAccount currentAccount = userAccountRepo.getOne(param.getCurrentAccountId());
+		UserAccount lowerLevelAccount = currentAccount;
+		if (StrUtil.isNotBlank(param.getUserName())) {
+			lowerLevelAccount = userAccountRepo.findByUserName(param.getUserName());
+			if (lowerLevelAccount == null) {
+				throw new BizException(BizError.用户名不存在);
+			}
+			// 说明该用户名对应的账号不是当前账号的下级账号
+			if (!lowerLevelAccount.getAccountLevelPath().startsWith(currentAccount.getAccountLevelPath())) {
+				throw new BizException(BizError.不是上级账号无权查看该账号及下级的帐变日志);
+			}
+		}
+		String lowerLevelAccountId = lowerLevelAccount.getId();
+		String lowerLevelAccountLevelPath = lowerLevelAccount.getAccountLevelPath();
+
+		Specification<AccountChangeLog> spec = new Specification<AccountChangeLog>() {
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
+			public Predicate toPredicate(Root<AccountChangeLog> root, CriteriaQuery<?> query, CriteriaBuilder builder) {
+				List<Predicate> predicates = new ArrayList<Predicate>();
+				if (StrUtil.isNotBlank(param.getUserName())) {
+					predicates.add(builder.equal(root.get("userAccountId"), lowerLevelAccountId));
+				} else {
+					predicates.add(builder.like(root.join("userAccount", JoinType.INNER).get("accountLevelPath"),
+							lowerLevelAccountLevelPath + "%"));
+				}
+				if (param.getStartTime() != null) {
+					predicates.add(builder.greaterThanOrEqualTo(root.get("accountChangeTime").as(Date.class),
+							DateUtil.beginOfDay(param.getStartTime())));
+				}
+				if (param.getEndTime() != null) {
+					predicates.add(builder.lessThanOrEqualTo(root.get("accountChangeTime").as(Date.class),
+							DateUtil.endOfDay(param.getEndTime())));
+				}
+				if (StrUtil.isNotBlank(param.getAccountChangeTypeCode())) {
+					predicates.add(builder.equal(root.get("accountChangeTypeCode"), param.getAccountChangeTypeCode()));
+				}
+				return predicates.size() > 0 ? builder.and(predicates.toArray(new Predicate[predicates.size()])) : null;
+			}
+		};
+		Page<AccountChangeLog> result = accountChangeLogRepo.findAll(spec, PageRequest.of(param.getPageNum() - 1,
+				param.getPageSize(), Sort.by(Sort.Order.desc("accountChangeTime"))));
+		PageResult<AccountChangeLogVO> pageResult = new PageResult<>(AccountChangeLogVO.convertFor(result.getContent()),
+				param.getPageNum(), param.getPageSize(), result.getTotalElements());
+		return pageResult;
 	}
 
 }

@@ -80,7 +80,8 @@ public class LoginLogService {
 	}
 
 	@Transactional
-	public void recordLoginLog(String userName, String state, String msg, String ipAddr, UserAgent userAgent) {
+	public void recordLoginLog(String userName, String system, String state, String msg, String ipAddr,
+			UserAgent userAgent) {
 		ThreadPoolUtils.getLoginLogPool().schedule(() -> {
 			Date now = new Date();
 			String loginLocation = null;
@@ -95,6 +96,7 @@ public class LoginLogService {
 			LoginLog loginLog = new LoginLog();
 			loginLog.setId(IdUtils.getId());
 			loginLog.setUserName(userName);
+			loginLog.setSystem(system);
 			loginLog.setState(state);
 			loginLog.setMsg(msg);
 			loginLog.setIpAddr(ipAddr);

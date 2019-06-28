@@ -177,6 +177,22 @@ public class PageController {
 		return "lower-level-open-an-account";
 	}
 	
+	@GetMapping("/lower-level-account-manage")
+	public String LowerLevelAccountManage() {
+		return "lower-level-account-manage";
+	}
+	
+	@GetMapping("/lower-level-account-change")
+	public String LowerLevelAccountChange() {
+		return "lower-level-account-change";
+	}
+	
+	@GetMapping("/lower-level-account-receive-order-record")
+	public String LowerLevelAccountReceiveOrderRecord() {
+		return "lower-level-account-receive-order-record";
+	}
+	
+	
 	@ResponseBody
 	@GetMapping("/paySuccessNotice")
 	public String paySuccessNotice() {

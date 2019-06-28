@@ -61,6 +61,9 @@ var loginLogVM = new Vue({
 					field : 'userName',
 					title : '登录用户名'
 				}, {
+					field : 'systemName',
+					title : '登录系统'
+				}, {
 					field : 'ipAddr',
 					title : 'ip地址'
 				}, {

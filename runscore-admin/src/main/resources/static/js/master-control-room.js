@@ -10,9 +10,10 @@ var masterControlRoomVM = new Vue({
 		/**
 		 * 商户订单start
 		 */
-		orderReceiveEffectiveDuration : '',
+		receiveOrderEffectiveDuration : '',
 		orderPayEffectiveDuration : '',
 		receiveOrderUpperLimit : '',
+		cashDepositMinimumRequire : '',
 		unfixedGatheringCodeReceiveOrder : false,
 		/**
 		 * 充值start
@@ -40,7 +41,7 @@ var masterControlRoomVM = new Vue({
 	mounted : function() {
 		var that = this;
 		that.loadInviteRegisterSetting();
-		that.loadPlatformOrderSetting();
+		that.loadReceiveOrderSetting();
 		that.loadRechargeSetting();
 		that.loadCustomerQrcodeSetting();
 
@@ -107,22 +108,23 @@ var masterControlRoomVM = new Vue({
 			});
 		},
 
-		loadPlatformOrderSetting : function() {
+		loadReceiveOrderSetting : function() {
 			var that = this;
-			that.$http.get('/masterControl/getPlatformOrderSetting').then(function(res) {
+			that.$http.get('/masterControl/getReceiveOrderSetting').then(function(res) {
 				if (res.body.data != null) {
-					that.orderReceiveEffectiveDuration = res.body.data.orderReceiveEffectiveDuration;
+					that.receiveOrderEffectiveDuration = res.body.data.receiveOrderEffectiveDuration;
 					that.orderPayEffectiveDuration = res.body.data.orderPayEffectiveDuration;
 					that.receiveOrderUpperLimit = res.body.data.receiveOrderUpperLimit;
+					that.cashDepositMinimumRequire = res.body.data.cashDepositMinimumRequire;
 					that.unfixedGatheringCodeReceiveOrder = res.body.data.unfixedGatheringCodeReceiveOrder;
 				}
 			});
 		},
 
-		updatePlatformOrderSetting : function() {
+		updateReceiveOrderSetting : function() {
 			var that = this;
-			var orderReceiveEffectiveDuration = that.orderReceiveEffectiveDuration;
-			if (orderReceiveEffectiveDuration == null || orderReceiveEffectiveDuration == '') {
+			var receiveOrderEffectiveDuration = that.receiveOrderEffectiveDuration;
+			if (receiveOrderEffectiveDuration == null || receiveOrderEffectiveDuration == '') {
 				layer.alert('请输入接单有效时长', {
 					title : '提示',
 					icon : 7,
@@ -148,6 +150,15 @@ var masterControlRoomVM = new Vue({
 				});
 				return;
 			}
+			var cashDepositMinimumRequire = that.cashDepositMinimumRequire;
+			if (cashDepositMinimumRequire == null || cashDepositMinimumRequire == '') {
+				layer.alert('请输入保证金最低要求金额', {
+					title : '提示',
+					icon : 7,
+					time : 3000
+				});
+				return;
+			}
 			var unfixedGatheringCodeReceiveOrder = that.unfixedGatheringCodeReceiveOrder;
 			if (unfixedGatheringCodeReceiveOrder == null) {
 				layer.alert('请选择是否支持不固定金额收款码接单', {
@@ -158,10 +169,11 @@ var masterControlRoomVM = new Vue({
 				return;
 			}
 
-			that.$http.post('/masterControl/updatePlatformOrderSetting', {
-				orderReceiveEffectiveDuration : orderReceiveEffectiveDuration,
+			that.$http.post('/masterControl/updateReceiveOrderSetting', {
+				receiveOrderEffectiveDuration : receiveOrderEffectiveDuration,
 				orderPayEffectiveDuration : orderPayEffectiveDuration,
 				receiveOrderUpperLimit : receiveOrderUpperLimit,
+				cashDepositMinimumRequire : cashDepositMinimumRequire,
 				unfixedGatheringCodeReceiveOrder : unfixedGatheringCodeReceiveOrder
 			}, {
 				emulateJSON : true
@@ -171,7 +183,7 @@ var masterControlRoomVM = new Vue({
 					time : 3000,
 					shade : false
 				});
-				that.loadPlatformOrderSetting();
+				that.loadReceiveOrderSetting();
 			});
 		},
 

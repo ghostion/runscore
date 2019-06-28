@@ -14,7 +14,7 @@ public class OrderRebateAutoSettlementTask {
 	@Autowired
 	private MerchantOrderService merchantOrderService;
 
-	@Scheduled(fixedRate = 90000)
+	@Scheduled(fixedRate = 50000)
 	public void execute() {
 		try {
 			log.info("订单返点自动结算定时任务start");

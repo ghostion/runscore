@@ -12,6 +12,7 @@ import me.zohar.runscore.common.vo.Result;
 import me.zohar.runscore.config.security.UserAccountDetails;
 import me.zohar.runscore.useraccount.param.AccountChangeLogQueryCondParam;
 import me.zohar.runscore.useraccount.param.BindBankInfoParam;
+import me.zohar.runscore.useraccount.param.LowerLevelAccountChangeLogQueryCondParam;
 import me.zohar.runscore.useraccount.param.ModifyLoginPwdParam;
 import me.zohar.runscore.useraccount.param.ModifyMoneyPwdParam;
 import me.zohar.runscore.useraccount.param.UserAccountRegisterParam;
@@ -24,7 +25,7 @@ public class UserAccountController {
 
 	@Autowired
 	private UserAccountService userAccountService;
-	
+
 	@PostMapping("/updateReceiveOrderState")
 	@ResponseBody
 	public Result updateReceiveOrderState(String receiveOrderState) {
@@ -98,6 +99,15 @@ public class UserAccountController {
 				.getPrincipal();
 		param.setUserAccountId(user.getUserAccountId());
 		return Result.success().setData(userAccountService.findAccountChangeLogByPage(param));
+	}
+
+	@GetMapping("/findLowerLevelAccountChangeLogByPage")
+	@ResponseBody
+	public Result findLowerLevelAccountChangeLogByPage(LowerLevelAccountChangeLogQueryCondParam param) {
+		UserAccountDetails user = (UserAccountDetails) SecurityContextHolder.getContext().getAuthentication()
+				.getPrincipal();
+		param.setCurrentAccountId(user.getUserAccountId());
+		return Result.success().setData(userAccountService.findLowerLevelAccountChangeLogByPage(param));
 	}
 
 }

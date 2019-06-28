@@ -14,6 +14,8 @@ import me.zohar.runscore.agent.param.GenerateInviteCodeParam;
 import me.zohar.runscore.agent.service.AgentService;
 import me.zohar.runscore.common.vo.Result;
 import me.zohar.runscore.config.security.UserAccountDetails;
+import me.zohar.runscore.useraccount.param.LowerLevelAccountQueryCondParam;
+import me.zohar.runscore.useraccount.service.UserAccountService;
 
 @Controller
 @RequestMapping("/agent")
@@ -21,6 +23,9 @@ public class AgentController {
 
 	@Autowired
 	private AgentService agentService;
+
+	@Autowired
+	private UserAccountService userAccountService;
 
 	@GetMapping("/findAllRebate")
 	@ResponseBody
@@ -46,6 +51,15 @@ public class AgentController {
 		param.setInviterId(user.getUserAccountId());
 		String inviteCodeId = agentService.generateInviteCode(param);
 		return Result.success().setData(agentService.getInviteCodeDetailsInfoById(inviteCodeId));
+	}
+
+	@GetMapping("/findLowerLevelAccountDetailsInfoByPage")
+	@ResponseBody
+	public Result findLowerLevelAccountDetailsInfoByPage(LowerLevelAccountQueryCondParam param) {
+		UserAccountDetails user = (UserAccountDetails) SecurityContextHolder.getContext().getAuthentication()
+				.getPrincipal();
+		param.setCurrentAccountId(user.getUserAccountId());
+		return Result.success().setData(userAccountService.findLowerLevelAccountDetailsInfoByPage(param));
 	}
 
 }

@@ -6,19 +6,23 @@ import javax.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
-public class UpdatePlatformOrderSettingParam {
+public class UpdateReceiveOrderSettingParam {
 
 	@NotNull
 	@DecimalMin(value = "0", inclusive = true)
-	private Integer orderReceiveEffectiveDuration;
+	private Integer receiveOrderEffectiveDuration;
 
 	@NotNull
 	@DecimalMin(value = "0", inclusive = true)
 	private Integer orderPayEffectiveDuration;
-
+	
 	@NotNull
 	@DecimalMin(value = "0", inclusive = false)
 	private Integer receiveOrderUpperLimit;
+	
+	@NotNull
+	@DecimalMin(value = "0", inclusive = true)
+	private Double cashDepositMinimumRequire;
 
 	@NotNull
 	private Boolean unfixedGatheringCodeReceiveOrder;

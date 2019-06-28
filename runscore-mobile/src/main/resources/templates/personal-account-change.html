@@ -14,39 +14,6 @@
 <script src="/js/common/common.js"></script>
 <link href="/css/common/common.css" rel="stylesheet" type="text/css">
 <style type="text/css">
-.account-change {
-	background-color: #fff;;
-	margin-bottom: 1rem;
-	display: flex;
-	padding-left: 1.2rem;
-	padding-right: 0.2rem;
-	padding-top: 0.5rem;
-}
-
-.account-change-body {
-	flex: 4;
-	display: flex;
-	flex-direction: column;
-}
-
-.account-change-body-item label {
-	text-align: end;
-	width: 5rem;
-	margin-right: 0.5rem;
-}
-
-.account-change-body-item span {
-	min-width: 5rem;
-	display: inline-block;
-}
-
-.account-change-body-item-highlight {
-	color: #c3606a;
-}
-
-.page-link {
-	color: #007bff !important
-}
 </style>
 </head>
 
@@ -63,16 +30,16 @@
 					<button class="btn btn-outline-secondary" type="button" v-on:click="query">查询</button>
 				</div>
 			</div>
-			<div class="account-change" v-for="accountChangeLog in accountChangeLogs">
-				<div class="account-change-body">
-					<div class="account-change-body-item">
+			<div class="form-details" v-for="accountChangeLog in accountChangeLogs">
+				<div class="form-details-body">
+					<div class="form-details-item">
 						<label>帐变时间:</label> <span>{{accountChangeLog.accountChangeTime}}</span>
 					</div>
-					<div class="account-change-body-item">
+					<div class="form-details-item">
 						<label>帐变类型:</label> <span>{{accountChangeLog.accountChangeTypeName}}</span>
 					</div>
-					<div class="account-change-body-item">
-						<label>帐变金额:</label> <span>{{accountChangeLog.accountChangeAmount}}元</span><label>保证金:</label> <span class="account-change-body-item-highlight">{{accountChangeLog.cashDeposit}}元</span>
+					<div class="form-details-item">
+						<label>帐变金额:</label> <span>{{accountChangeLog.accountChangeAmount}}元</span><label>保证金:</label> <span class="form-details-item-highlight">{{accountChangeLog.cashDeposit}}元</span>
 					</div>
 				</div>
 			</div>

@@ -19,7 +19,7 @@
 }
 
 .master-control-room-row .card-body {
-	height: 190px;
+	height: 230px;
 	padding-left: 2.25rem;
 }
 
@@ -91,11 +91,11 @@
 			</div>
 			<div class="col-sm-4">
 				<div class="card">
-					<div class="card-header">商户订单</div>
+					<div class="card-header">接单设置</div>
 					<div class="card-body">
 						<div class="row">
 							<div class="col-sm-12">
-								<label>接单有效时长</label> <span><input type="text" class="form-control-sm master-control-room-input" v-model="orderReceiveEffectiveDuration">分钟</span>
+								<label>接单有效时长</label> <span><input type="text" class="form-control-sm master-control-room-input" v-model="receiveOrderEffectiveDuration">分钟</span>
 							</div>
 						</div>
 						<div class="row">
@@ -110,12 +110,17 @@
 						</div>
 						<div class="row">
 							<div class="col-sm-12">
+								<label>保证金最低要求</label> <span><input type="text" class="form-control-sm master-control-room-input" v-model="cashDepositMinimumRequire">元</span>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-sm-12">
 								<div class="custom-control custom-switch custom-control-inline">
 									<input type="checkbox" class="custom-control-input" id="unfixedGatheringCodeReceiveOrder" v-model="unfixedGatheringCodeReceiveOrder"> <label class="custom-control-label" for="unfixedGatheringCodeReceiveOrder">支持不固定金额收款码接单</label>
 								</div>
 							</div>
 						</div>
-						<button type="button" class="btn btn-success btn-sm" v-on:click="updatePlatformOrderSetting">更新</button>
+						<button type="button" class="btn btn-success btn-sm" v-on:click="updateReceiveOrderSetting">更新</button>
 					</div>
 				</div>
 			</div>

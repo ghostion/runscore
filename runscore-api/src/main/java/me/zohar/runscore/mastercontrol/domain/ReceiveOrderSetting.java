@@ -21,10 +21,10 @@ import me.zohar.runscore.common.utils.IdUtils;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "platform_order_setting")
+@Table(name = "receive_order_setting")
 @DynamicInsert(true)
 @DynamicUpdate(true)
-public class PlatformOrderSetting {
+public class ReceiveOrderSetting {
 
 	/**
 	 * 主键id
@@ -36,7 +36,7 @@ public class PlatformOrderSetting {
 	/**
 	 * 接单有效时长
 	 */
-	private Integer orderReceiveEffectiveDuration;
+	private Integer receiveOrderEffectiveDuration;
 
 	/**
 	 * 支付有效时长
@@ -48,6 +48,11 @@ public class PlatformOrderSetting {
 	 */
 	private Integer receiveOrderUpperLimit;
 
+	/**
+	 * 保证金最低要求
+	 */
+	private Double cashDepositMinimumRequire;
+
 	private Boolean unfixedGatheringCodeReceiveOrder;
 
 	/**
@@ -55,16 +60,8 @@ public class PlatformOrderSetting {
 	 */
 	private Date latelyUpdateTime;
 
-	public void update(Integer orderEffectiveDuration, Integer receiveOrderUpperLimit,
-			Boolean unfixedGatheringCodeReceiveOrder) {
-		this.setOrderReceiveEffectiveDuration(orderEffectiveDuration);
-		this.setReceiveOrderUpperLimit(receiveOrderUpperLimit);
-		this.setUnfixedGatheringCodeReceiveOrder(unfixedGatheringCodeReceiveOrder);
-		this.setLatelyUpdateTime(new Date());
-	}
-
-	public static PlatformOrderSetting build() {
-		PlatformOrderSetting platformOrderSetting = new PlatformOrderSetting();
+	public static ReceiveOrderSetting build() {
+		ReceiveOrderSetting platformOrderSetting = new ReceiveOrderSetting();
 		platformOrderSetting.setId(IdUtils.getId());
 		return platformOrderSetting;
 	}

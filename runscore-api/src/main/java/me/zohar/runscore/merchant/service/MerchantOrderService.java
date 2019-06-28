@@ -51,12 +51,13 @@ import me.zohar.runscore.dictconfig.DictHolder;
 import me.zohar.runscore.dictconfig.vo.DictItemVO;
 import me.zohar.runscore.gatheringcode.domain.GatheringCode;
 import me.zohar.runscore.gatheringcode.repo.GatheringCodeRepo;
-import me.zohar.runscore.mastercontrol.domain.PlatformOrderSetting;
-import me.zohar.runscore.mastercontrol.repo.PlatformOrderSettingRepo;
+import me.zohar.runscore.mastercontrol.domain.ReceiveOrderSetting;
+import me.zohar.runscore.mastercontrol.repo.ReceiveOrderSettingRepo;
 import me.zohar.runscore.merchant.domain.Merchant;
 import me.zohar.runscore.merchant.domain.MerchantOrder;
 import me.zohar.runscore.merchant.domain.MerchantOrderPayInfo;
 import me.zohar.runscore.merchant.domain.OrderRebate;
+import me.zohar.runscore.merchant.param.LowerLevelAccountReceiveOrderQueryCondParam;
 import me.zohar.runscore.merchant.param.ManualStartOrderParam;
 import me.zohar.runscore.merchant.param.MerchantOrderQueryCondParam;
 import me.zohar.runscore.merchant.param.MyReceiveOrderRecordQueryCondParam;
@@ -67,10 +68,10 @@ import me.zohar.runscore.merchant.repo.MerchantRepo;
 import me.zohar.runscore.merchant.repo.OrderRebateRepo;
 import me.zohar.runscore.merchant.vo.MerchantOrderDetailsVO;
 import me.zohar.runscore.merchant.vo.MerchantOrderVO;
-import me.zohar.runscore.merchant.vo.MyReceiveOrderRecordVO;
 import me.zohar.runscore.merchant.vo.MyWaitConfirmOrderVO;
 import me.zohar.runscore.merchant.vo.MyWaitReceivingOrderVO;
 import me.zohar.runscore.merchant.vo.OrderGatheringCodeVO;
+import me.zohar.runscore.merchant.vo.ReceiveOrderRecordVO;
 import me.zohar.runscore.merchant.vo.StartOrderSuccessVO;
 import me.zohar.runscore.useraccount.domain.AccountChangeLog;
 import me.zohar.runscore.useraccount.domain.UserAccount;
@@ -104,7 +105,7 @@ public class MerchantOrderService {
 	private AccountChangeLogRepo accountChangeLogRepo;
 
 	@Autowired
-	private PlatformOrderSettingRepo platformOrderSettingRepo;
+	private ReceiveOrderSettingRepo platformOrderSettingRepo;
 
 	@Autowired
 	private OrderRebateRepo orderRebateRepo;
@@ -126,7 +127,7 @@ public class MerchantOrderService {
 		if (!(Constant.商户订单状态_申诉中.equals(merchantOrder.getOrderState()))) {
 			throw new BizException(BizError.只有申诉中的商户订单才能取消订单退款);
 		}
-		UserAccount userAccount = merchantOrder.getUserAccount();
+		UserAccount userAccount = merchantOrder.getReceivedAccount();
 		Double cashDeposit = NumberUtil.round(userAccount.getCashDeposit() + merchantOrder.getGatheringAmount(), 4)
 				.doubleValue();
 		userAccount.setCashDeposit(cashDeposit);
@@ -176,7 +177,7 @@ public class MerchantOrderService {
 	@Transactional(readOnly = true)
 	public String getGatheringCodeStorageId(String receivedAccountId, String gatheringChannelCode,
 			Double gatheringAmount) {
-		PlatformOrderSetting merchantOrderSetting = platformOrderSettingRepo.findTopByOrderByLatelyUpdateTime();
+		ReceiveOrderSetting merchantOrderSetting = platformOrderSettingRepo.findTopByOrderByLatelyUpdateTime();
 		if (merchantOrderSetting.getUnfixedGatheringCodeReceiveOrder()) {
 			GatheringCode gatheringCode = gatheringCodeRepo
 					.findTopByUserAccountIdAndGatheringChannelCodeAndFixedGatheringAmountIsFalse(receivedAccountId,
@@ -234,7 +235,7 @@ public class MerchantOrderService {
 	 */
 	@Transactional
 	public void receiveOrderBountySettlement(MerchantOrder merchantOrder) {
-		UserAccount userAccount = merchantOrder.getUserAccount();
+		UserAccount userAccount = merchantOrder.getReceivedAccount();
 		double bounty = NumberUtil.round(merchantOrder.getGatheringAmount() * userAccount.getRebate() * 0.01, 4)
 				.doubleValue();
 		merchantOrder.updateBounty(bounty);
@@ -255,8 +256,8 @@ public class MerchantOrderService {
 	 * @param bettingOrder
 	 */
 	public void generateOrderRebate(MerchantOrder merchantOrder) {
-		UserAccount userAccount = merchantOrder.getUserAccount();
-		UserAccount superior = merchantOrder.getUserAccount().getInviter();
+		UserAccount userAccount = merchantOrder.getReceivedAccount();
+		UserAccount superior = merchantOrder.getReceivedAccount().getInviter();
 		while (superior != null) {
 			double rebate = NumberUtil.round(superior.getRebate() - userAccount.getRebate(), 4).doubleValue();
 			if (rebate < 0) {
@@ -325,7 +326,7 @@ public class MerchantOrderService {
 		if (CollectionUtil.isEmpty(gatheringCodes)) {
 			throw new BizException(BizError.未设置收款码无法接单);
 		}
-		PlatformOrderSetting merchantOrderSetting = platformOrderSettingRepo.findTopByOrderByLatelyUpdateTime();
+		ReceiveOrderSetting merchantOrderSetting = platformOrderSettingRepo.findTopByOrderByLatelyUpdateTime();
 		if (merchantOrderSetting.getUnfixedGatheringCodeReceiveOrder()) {
 			Map<String, String> gatheringChannelCodeMap = new HashMap<>();
 			for (GatheringCode gatheringCode : gatheringCodes) {
@@ -386,9 +387,9 @@ public class MerchantOrderService {
 		param.setSign(sign);
 
 		Integer orderEffectiveDuration = Constant.商户订单接单有效时长;
-		PlatformOrderSetting setting = platformOrderSettingRepo.findTopByOrderByLatelyUpdateTime();
+		ReceiveOrderSetting setting = platformOrderSettingRepo.findTopByOrderByLatelyUpdateTime();
 		if (setting != null) {
-			orderEffectiveDuration = setting.getOrderReceiveEffectiveDuration();
+			orderEffectiveDuration = setting.getReceiveOrderEffectiveDuration();
 		}
 		MerchantOrder merchantOrder = param.convertToPo(merchant.getId(), orderEffectiveDuration);
 		MerchantOrderPayInfo payInfo = param.convertToPayInfoPo(merchantOrder.getId());
@@ -423,9 +424,20 @@ public class MerchantOrderService {
 		if (StrUtil.isBlank(gatheringCodeStorageId)) {
 			throw new BizException(BizError.无法接单找不到对应金额的收款码);
 		}
-		verifyAccountReceiveOrderUpperLimit(userAccountId);
-
+		// 校验用户是否达到接单上限,若达到上限,则不能接单
+		ReceiveOrderSetting setting = platformOrderSettingRepo.findTopByOrderByLatelyUpdateTime();
+		if (setting != null && setting.getReceiveOrderUpperLimit() != null) {
+			List<MyWaitConfirmOrderVO> waitConfirmOrders = findMyWaitConfirmOrder(userAccountId);
+			if (waitConfirmOrders.size() >= setting.getReceiveOrderUpperLimit()) {
+				throw new BizException(BizError.已达到接单数量上限);
+			}
+		}
 		UserAccount userAccount = userAccountRepo.getOne(userAccountId);
+		if (setting != null && setting.getCashDepositMinimumRequire() != null) {
+			if (userAccount.getCashDeposit() < setting.getCashDepositMinimumRequire()) {
+				throw new BizException(BizError.未达到接单保证金最低要求);
+			}
+		}
 		Double cashDeposit = NumberUtil.round(userAccount.getCashDeposit() - platformOrder.getGatheringAmount(), 4)
 				.doubleValue();
 		if (cashDeposit < 0) {
@@ -436,8 +448,7 @@ public class MerchantOrderService {
 		userAccountRepo.save(userAccount);
 
 		Integer orderEffectiveDuration = Constant.商户订单支付有效时长;
-		PlatformOrderSetting setting = platformOrderSettingRepo.findTopByOrderByLatelyUpdateTime();
-		if (setting != null) {
+		if (setting != null && setting.getOrderPayEffectiveDuration() != null) {
 			orderEffectiveDuration = setting.getOrderPayEffectiveDuration();
 		}
 		platformOrder.updateReceived(userAccount.getId(), gatheringCodeStorageId);
@@ -445,23 +456,6 @@ public class MerchantOrderService {
 				DateUtil.offset(platformOrder.getReceivedTime(), DateField.MINUTE, orderEffectiveDuration));
 		merchantOrderRepo.save(platformOrder);
 		accountChangeLogRepo.save(AccountChangeLog.buildWithReceiveOrderDeduction(userAccount, platformOrder));
-	}
-
-	/**
-	 * 校验用户是否达到接单上限,若达到上限,则不能接单
-	 * 
-	 * @param userAccountId
-	 */
-	@Transactional(readOnly = true)
-	public void verifyAccountReceiveOrderUpperLimit(@NotBlank String userAccountId) {
-		PlatformOrderSetting setting = platformOrderSettingRepo.findTopByOrderByLatelyUpdateTime();
-		if (setting == null || setting.getReceiveOrderUpperLimit() == null) {
-			return;
-		}
-		List<MyWaitConfirmOrderVO> waitConfirmOrders = findMyWaitConfirmOrder(userAccountId);
-		if (waitConfirmOrders.size() >= setting.getReceiveOrderUpperLimit()) {
-			throw new BizException(BizError.已达到接单数量上限);
-		}
 	}
 
 	@Transactional(readOnly = true)
@@ -519,7 +513,7 @@ public class MerchantOrderService {
 	}
 
 	@Transactional(readOnly = true)
-	public PageResult<MyReceiveOrderRecordVO> findMyReceiveOrderRecordByPage(MyReceiveOrderRecordQueryCondParam param) {
+	public PageResult<ReceiveOrderRecordVO> findMyReceiveOrderRecordByPage(MyReceiveOrderRecordQueryCondParam param) {
 		Specification<MerchantOrder> spec = new Specification<MerchantOrder>() {
 			/**
 			 * 
@@ -546,8 +540,8 @@ public class MerchantOrderService {
 		};
 		Page<MerchantOrder> result = merchantOrderRepo.findAll(spec,
 				PageRequest.of(param.getPageNum() - 1, param.getPageSize(), Sort.by(Sort.Order.desc("submitTime"))));
-		PageResult<MyReceiveOrderRecordVO> pageResult = new PageResult<>(
-				MyReceiveOrderRecordVO.convertFor(result.getContent()), param.getPageNum(), param.getPageSize(),
+		PageResult<ReceiveOrderRecordVO> pageResult = new PageResult<>(
+				ReceiveOrderRecordVO.convertFor(result.getContent()), param.getPageNum(), param.getPageSize(),
 				result.getTotalElements());
 		return pageResult;
 	}
@@ -622,9 +616,9 @@ public class MerchantOrderService {
 			throw new BizException(BizError.签名不正确);
 		}
 		Integer orderEffectiveDuration = Constant.商户订单接单有效时长;
-		PlatformOrderSetting setting = platformOrderSettingRepo.findTopByOrderByLatelyUpdateTime();
+		ReceiveOrderSetting setting = platformOrderSettingRepo.findTopByOrderByLatelyUpdateTime();
 		if (setting != null) {
-			orderEffectiveDuration = setting.getOrderReceiveEffectiveDuration();
+			orderEffectiveDuration = setting.getReceiveOrderEffectiveDuration();
 		}
 		MerchantOrder merchantOrder = param.convertToPo(merchant.getId(), orderEffectiveDuration);
 		MerchantOrderPayInfo payInfo = param.convertToPayInfoPo(merchantOrder.getId());
@@ -681,6 +675,63 @@ public class MerchantOrderService {
 				Constant.商户订单通知成功返回值.equals(result) ? Constant.商户订单支付通知状态_通知成功 : Constant.商户订单支付通知状态_通知失败);
 		merchantOrderPayInfoRepo.save(payInfo);
 		return result;
+	}
+
+	@Transactional(readOnly = true)
+	public PageResult<ReceiveOrderRecordVO> findLowerLevelAccountReceiveOrderRecordByPage(
+			LowerLevelAccountReceiveOrderQueryCondParam param) {
+		UserAccount currentAccount = userAccountRepo.getOne(param.getCurrentAccountId());
+		UserAccount lowerLevelAccount = currentAccount;
+		if (StrUtil.isNotBlank(param.getUserName())) {
+			lowerLevelAccount = userAccountRepo.findByUserName(param.getUserName());
+			if (lowerLevelAccount == null) {
+				throw new BizException(BizError.用户名不存在);
+			}
+			// 说明该用户名对应的账号不是当前账号的下级账号
+			if (!lowerLevelAccount.getAccountLevelPath().startsWith(currentAccount.getAccountLevelPath())) {
+				throw new BizException(BizError.不是上级账号无权查看该账号及下级的接单记录);
+			}
+		}
+		String lowerLevelAccountId = lowerLevelAccount.getId();
+		String lowerLevelAccountLevelPath = lowerLevelAccount.getAccountLevelPath();
+
+		Specification<MerchantOrder> spec = new Specification<MerchantOrder>() {
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
+			public Predicate toPredicate(Root<MerchantOrder> root, CriteriaQuery<?> query, CriteriaBuilder builder) {
+				List<Predicate> predicates = new ArrayList<Predicate>();
+				if (StrUtil.isNotBlank(param.getUserName())) {
+					predicates.add(builder.equal(root.get("receivedAccountId"), lowerLevelAccountId));
+				} else {
+					predicates.add(builder.like(root.join("receivedAccount", JoinType.INNER).get("accountLevelPath"),
+							lowerLevelAccountLevelPath + "%"));
+				}
+				if (StrUtil.isNotBlank(param.getOrderState())) {
+					predicates.add(builder.equal(root.get("orderState"), param.getOrderState()));
+				}
+				if (StrUtil.isNotBlank(param.getGatheringChannelCode())) {
+					predicates.add(builder.equal(root.get("gatheringChannelCode"), param.getGatheringChannelCode()));
+				}
+				if (param.getStartTime() != null) {
+					predicates.add(builder.greaterThanOrEqualTo(root.get("receivedTime").as(Date.class),
+							DateUtil.beginOfDay(param.getStartTime())));
+				}
+				if (param.getEndTime() != null) {
+					predicates.add(builder.lessThanOrEqualTo(root.get("receivedTime").as(Date.class),
+							DateUtil.endOfDay(param.getEndTime())));
+				}
+				return predicates.size() > 0 ? builder.and(predicates.toArray(new Predicate[predicates.size()])) : null;
+			}
+		};
+		Page<MerchantOrder> result = merchantOrderRepo.findAll(spec,
+				PageRequest.of(param.getPageNum() - 1, param.getPageSize(), Sort.by(Sort.Order.desc("submitTime"))));
+		PageResult<ReceiveOrderRecordVO> pageResult = new PageResult<>(
+				ReceiveOrderRecordVO.convertFor(result.getContent()), param.getPageNum(), param.getPageSize(),
+				result.getTotalElements());
+		return pageResult;
 	}
 
 }

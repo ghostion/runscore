@@ -21,16 +21,16 @@ import lombok.extern.slf4j.Slf4j;
 import me.zohar.runscore.common.valid.ParamValid;
 import me.zohar.runscore.mastercontrol.domain.CustomerQrcodeSetting;
 import me.zohar.runscore.mastercontrol.domain.InviteRegisterSetting;
-import me.zohar.runscore.mastercontrol.domain.PlatformOrderSetting;
+import me.zohar.runscore.mastercontrol.domain.ReceiveOrderSetting;
 import me.zohar.runscore.mastercontrol.domain.RechargeSetting;
-import me.zohar.runscore.mastercontrol.param.UpdatePlatformOrderSettingParam;
+import me.zohar.runscore.mastercontrol.param.UpdateReceiveOrderSettingParam;
 import me.zohar.runscore.mastercontrol.repo.CustomerQrcodeSettingRepo;
 import me.zohar.runscore.mastercontrol.repo.InviteRegisterSettingRepo;
-import me.zohar.runscore.mastercontrol.repo.PlatformOrderSettingRepo;
+import me.zohar.runscore.mastercontrol.repo.ReceiveOrderSettingRepo;
 import me.zohar.runscore.mastercontrol.repo.RechargeSettingRepo;
 import me.zohar.runscore.mastercontrol.vo.CustomerQrcodeSettingVO;
 import me.zohar.runscore.mastercontrol.vo.InviteRegisterSettingVO;
-import me.zohar.runscore.mastercontrol.vo.PlatformOrderSettingVO;
+import me.zohar.runscore.mastercontrol.vo.ReceiveOrderSettingVO;
 import me.zohar.runscore.mastercontrol.vo.RechargeSettingVO;
 
 @Validated
@@ -42,7 +42,7 @@ public class MasterControlService {
 	private StringRedisTemplate redisTemplate;
 
 	@Autowired
-	private PlatformOrderSettingRepo platformOrderSettingRepo;
+	private ReceiveOrderSettingRepo receiveOrderSettingRepo;
 
 	@Autowired
 	private InviteRegisterSettingRepo inviteRegisterSettingRepo;
@@ -72,21 +72,21 @@ public class MasterControlService {
 	}
 
 	@Transactional(readOnly = true)
-	public PlatformOrderSettingVO getPlatformOrderSetting() {
-		PlatformOrderSetting setting = platformOrderSettingRepo.findTopByOrderByLatelyUpdateTime();
-		return PlatformOrderSettingVO.convertFor(setting);
+	public ReceiveOrderSettingVO getReceiveOrderSetting() {
+		ReceiveOrderSetting setting = receiveOrderSettingRepo.findTopByOrderByLatelyUpdateTime();
+		return ReceiveOrderSettingVO.convertFor(setting);
 	}
 
 	@ParamValid
 	@Transactional
-	public void updatePlatformOrderSetting(UpdatePlatformOrderSettingParam param) {
-		PlatformOrderSetting setting = platformOrderSettingRepo.findTopByOrderByLatelyUpdateTime();
+	public void updateReceiveOrderSetting(UpdateReceiveOrderSettingParam param) {
+		ReceiveOrderSetting setting = receiveOrderSettingRepo.findTopByOrderByLatelyUpdateTime();
 		if (setting == null) {
-			setting = PlatformOrderSetting.build();
+			setting = ReceiveOrderSetting.build();
 		}
 		BeanUtils.copyProperties(param, setting);
 		setting.setLatelyUpdateTime(new Date());
-		platformOrderSettingRepo.save(setting);
+		receiveOrderSettingRepo.save(setting);
 	}
 
 	@Transactional(readOnly = true)

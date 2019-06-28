@@ -9,12 +9,20 @@ import org.springframework.beans.BeanUtils;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.util.StrUtil;
 import lombok.Data;
 import me.zohar.runscore.dictconfig.DictHolder;
 import me.zohar.runscore.merchant.domain.MerchantOrder;
 
+/**
+ * 接单记录vo
+ * 
+ * @author zohar
+ * @date 2019年6月29日
+ *
+ */
 @Data
-public class MyReceiveOrderRecordVO {
+public class ReceiveOrderRecordVO {
 
 	/**
 	 * 主键id
@@ -56,25 +64,38 @@ public class MyReceiveOrderRecordVO {
 	 */
 	private Double bounty;
 
-	public static List<MyReceiveOrderRecordVO> convertFor(List<MerchantOrder> platformOrders) {
+	/**
+	 * 接单人账号id
+	 */
+	private String receivedAccountId;
+
+	/**
+	 * 接单人用户名
+	 */
+	private String receiverUserName;
+
+	public static List<ReceiveOrderRecordVO> convertFor(List<MerchantOrder> platformOrders) {
 		if (CollectionUtil.isEmpty(platformOrders)) {
 			return new ArrayList<>();
 		}
-		List<MyReceiveOrderRecordVO> vos = new ArrayList<>();
+		List<ReceiveOrderRecordVO> vos = new ArrayList<>();
 		for (MerchantOrder platformOrder : platformOrders) {
 			vos.add(convertFor(platformOrder));
 		}
 		return vos;
 	}
 
-	public static MyReceiveOrderRecordVO convertFor(MerchantOrder merchantOrder) {
+	public static ReceiveOrderRecordVO convertFor(MerchantOrder merchantOrder) {
 		if (merchantOrder == null) {
 			return null;
 		}
-		MyReceiveOrderRecordVO vo = new MyReceiveOrderRecordVO();
+		ReceiveOrderRecordVO vo = new ReceiveOrderRecordVO();
 		BeanUtils.copyProperties(merchantOrder, vo);
 		vo.setGatheringChannelName(DictHolder.getDictItemName("gatheringChannel", vo.getGatheringChannelCode()));
 		vo.setOrderStateName(DictHolder.getDictItemName("platformOrderState", vo.getOrderState()));
+		if (StrUtil.isNotBlank(merchantOrder.getReceivedAccountId()) && merchantOrder.getReceivedAccount() != null) {
+			vo.setReceiverUserName(merchantOrder.getReceivedAccount().getUserName());
+		}
 		return vo;
 	}
 

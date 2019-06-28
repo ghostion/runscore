@@ -124,7 +124,7 @@ public class MerchantOrder {
 	@NotFound(action = NotFoundAction.IGNORE)
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "received_account_id", updatable = false, insertable = false, foreignKey = @ForeignKey(value = ConstraintMode.NO_CONSTRAINT))
-	private UserAccount userAccount;
+	private UserAccount receivedAccount;
 
 	@Column(name = "pay_info_id", length = 32)
 	private String payInfoId;

@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import me.zohar.runscore.common.vo.Result;
-import me.zohar.runscore.mastercontrol.param.UpdatePlatformOrderSettingParam;
+import me.zohar.runscore.mastercontrol.param.UpdateReceiveOrderSettingParam;
 import me.zohar.runscore.mastercontrol.service.MasterControlService;
 
 /**
@@ -42,16 +42,16 @@ public class MasterControlController {
 		return Result.success();
 	}
 
-	@GetMapping("/getPlatformOrderSetting")
+	@GetMapping("/getReceiveOrderSetting")
 	@ResponseBody
-	public Result getPlatformOrderSetting() {
-		return Result.success().setData(service.getPlatformOrderSetting());
+	public Result getReceiveOrderSetting() {
+		return Result.success().setData(service.getReceiveOrderSetting());
 	}
 
-	@PostMapping("/updatePlatformOrderSetting")
+	@PostMapping("/updateReceiveOrderSetting")
 	@ResponseBody
-	public Result updatePlatformOrderSetting(UpdatePlatformOrderSettingParam param) {
-		service.updatePlatformOrderSetting(param);
+	public Result updateReceiveOrderSetting(UpdateReceiveOrderSettingParam param) {
+		service.updateReceiveOrderSetting(param);
 		return Result.success();
 	}
 

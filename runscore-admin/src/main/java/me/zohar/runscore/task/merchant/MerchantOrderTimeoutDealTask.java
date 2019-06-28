@@ -14,7 +14,7 @@ public class MerchantOrderTimeoutDealTask {
 	@Autowired
 	private MerchantOrderService merchantOrderService;
 
-	@Scheduled(fixedRate = 5000)
+	@Scheduled(fixedRate = 3000)
 	public void execute() {
 		try {
 			log.info("商户订单超时处理定时任务start");
