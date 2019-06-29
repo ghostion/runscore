@@ -117,10 +117,13 @@
 			</div>
 			<div>
 				<nav class="navbar bg-light footer-navbar home-page-nav">
-					<a class="navbar-brand footer-navbar-brand" v-on:click="footerVM.goTo('/recharge')"><i class="fa fa-jpy" aria-hidden="true"></i> <span>充值</span> </a> <a class="navbar-brand footer-navbar-brand" v-on:click="footerVM.goTo('/withdraw')"><i class="fa fa-money" aria-hidden="true"></i> <span>提现</span> </a> <a class="navbar-brand footer-navbar-brand" v-on:click="footerVM.goTo('/gathering-code')"><i class="fa fa-qrcode" aria-hidden="true"></i> <span>收款码</span> </a>
+					<a class="navbar-brand footer-navbar-brand" v-on:click="footerVM.goTo('/recharge')"><i class="fa fa-jpy" aria-hidden="true"></i> <span>充值</span> </a> <a class="navbar-brand footer-navbar-brand" v-on:click="footerVM.goTo('/withdraw')"><i class="fa fa-money" aria-hidden="true"></i> <span>提现</span> </a> <a class="navbar-brand footer-navbar-brand" v-on:click="footerVM.goTo('/recharge-withdraw-log')"><i class="fa fa-hdd-o" aria-hidden="true"></i> <span>个人充提</span> </a>
 				</nav>
 				<nav class="navbar bg-light footer-navbar home-page-nav">
-					<a class="navbar-brand footer-navbar-brand" v-on:click="footerVM.goTo('/receive-order-record')"><i class="fa fa-list-ul" aria-hidden="true"></i> <span>接单记录</span> </a> <a class="navbar-brand footer-navbar-brand" v-on:click="footerVM.goTo('/appeal-record')"><i class="fa fa-clock-o" aria-hidden="true"></i> <span>申诉记录</span> </a> <a class="navbar-brand footer-navbar-brand" v-on:click="footerVM.goTo('/personal-account-change')"><i class="fa fa-book" aria-hidden="true"></i> <span>个人帐变</span> </a>
+					<a class="navbar-brand footer-navbar-brand" v-on:click="footerVM.goTo('/gathering-code')"><i class="fa fa-qrcode" aria-hidden="true"></i> <span>收款码</span> </a> <a class="navbar-brand footer-navbar-brand" v-on:click="footerVM.goTo('/receive-order-record')"><i class="fa fa-list-ul" aria-hidden="true"></i> <span>接单记录</span> </a> <a class="navbar-brand footer-navbar-brand" v-on:click="footerVM.goTo('/appeal-record')"><i class="fa fa-clock-o" aria-hidden="true"></i> <span>申诉记录</span> </a>
+				</nav>
+				<nav class="navbar bg-light footer-navbar home-page-nav">
+					<a class="navbar-brand footer-navbar-brand" v-on:click="footerVM.goTo('/personal-account-change')"><i class="fa fa-book" aria-hidden="true"></i> <span>个人帐变</span> </a>
 				</nav>
 			</div>
 			<ul class="list-group">

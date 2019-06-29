@@ -1,5 +1,6 @@
 package me.zohar.runscore.merchant.service;
 
+import java.text.DecimalFormat;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -381,7 +382,8 @@ public class MerchantOrderService {
 		if (merchant == null) {
 			throw new BizException(BizError.商户未接入);
 		}
-		String sign = param.getMerchantNum() + param.getOrderNo() + String.valueOf(param.getGatheringAmount())
+		String sign = param.getMerchantNum() + param.getOrderNo()
+				+ new DecimalFormat("###################.###########").format(param.getGatheringAmount())
 				+ param.getNotifyUrl() + merchant.getSecretKey();
 		sign = new Digester(DigestAlgorithm.MD5).digestHex(sign);
 		param.setSign(sign);
@@ -609,8 +611,9 @@ public class MerchantOrderService {
 		if (unknownPayTypeFlag) {
 			throw new BizException(BizError.不支持该支付类型);
 		}
-		String sign = param.getMerchantNum() + param.getOrderNo() + String.valueOf(param.getAmount())
-				+ param.getNotifyUrl() + merchant.getSecretKey();
+		String sign = param.getMerchantNum() + param.getOrderNo()
+				+ new DecimalFormat("###################.###########").format(param.getAmount()) + param.getNotifyUrl()
+				+ merchant.getSecretKey();
 		sign = new Digester(DigestAlgorithm.MD5).digestHex(sign);
 		if (!sign.equals(param.getSign())) {
 			throw new BizException(BizError.签名不正确);
@@ -646,7 +649,8 @@ public class MerchantOrderService {
 		}
 
 		String sign = Constant.商户订单支付成功 + payInfo.getMerchantNum() + payInfo.getOrderNo()
-				+ String.valueOf(payInfo.getAmount()) + payInfo.getAttch() + merchant.getSecretKey();
+				+ new DecimalFormat("###################.###########").format(payInfo.getAmount())
+				+ merchant.getSecretKey();
 		sign = new Digester(DigestAlgorithm.MD5).digestHex(sign);
 		Map<String, Object> paramMap = new HashMap<>();
 		paramMap.put("merchantNum", payInfo.getMerchantNum());

@@ -54,6 +54,7 @@ a {
 .form-details-item span {
 	min-width: 5rem;
 	display: inline-block;
+	margin-bottom: .5rem;
 }
 
 .form-details-item button {

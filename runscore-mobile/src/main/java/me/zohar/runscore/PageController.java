@@ -78,6 +78,15 @@ public class PageController {
 	}
 
 	/**
+	 * 个人充提
+	 * @return
+	 */
+	@GetMapping("/recharge-withdraw-log")
+	public String rechargeWithdrawLog() {
+		return "recharge-withdraw-log";
+	}
+
+	/**
 	 * 收款码
 	 * 
 	 * @return
@@ -126,7 +135,7 @@ public class PageController {
 	public String appealRecord() {
 		return "appeal-record";
 	}
-	
+
 	/**
 	 * 申诉详情
 	 * 
@@ -176,23 +185,50 @@ public class PageController {
 	public String lowerLevelOpenAnAccount() {
 		return "lower-level-open-an-account";
 	}
-	
+
+	/**
+	 * 下级账号管理
+	 * @return
+	 */
 	@GetMapping("/lower-level-account-manage")
 	public String LowerLevelAccountManage() {
 		return "lower-level-account-manage";
 	}
-	
+
 	@GetMapping("/lower-level-account-change")
 	public String LowerLevelAccountChange() {
 		return "lower-level-account-change";
 	}
-	
+
+	/**
+	 * 团队接单明细
+	 * @return
+	 */
 	@GetMapping("/lower-level-account-receive-order-record")
 	public String LowerLevelAccountReceiveOrderRecord() {
 		return "lower-level-account-receive-order-record";
 	}
 	
+	/**
+	 * 团队充值明细
+	 * @return
+	 */
+	@GetMapping("/lower-level-recharge-details")
+	public String lowerLevelRechargeDetails() {
+		return "lower-level-recharge-details";
+	}
 	
+	/**
+	 * 团队提现明细
+	 * @return
+	 */
+	@GetMapping("/lower-level-withdraw-details")
+	public String lowerLevelWithdrawDetails() {
+		return "lower-level-withdraw-details";
+	}
+	
+	
+
 	@ResponseBody
 	@GetMapping("/paySuccessNotice")
 	public String paySuccessNotice() {

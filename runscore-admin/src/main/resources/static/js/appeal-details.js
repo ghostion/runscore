@@ -36,8 +36,7 @@ var appealDetailsVM = new Vue({
 					time : 3000,
 					shade : false
 				});
-				that.showAppealRecordPage();
-				that.refreshTable();
+				window.history.back(-1);
 			});
 		},
 
@@ -53,8 +52,7 @@ var appealDetailsVM = new Vue({
 					time : 3000,
 					shade : false
 				});
-				that.showAppealRecordPage();
-				that.refreshTable();
+				window.history.back(-1);
 			});
 		},
 
@@ -70,8 +68,7 @@ var appealDetailsVM = new Vue({
 					time : 3000,
 					shade : false
 				});
-				that.showAppealRecordPage();
-				that.refreshTable();
+				window.history.back(-1);
 			});
 		},
 
@@ -87,8 +84,7 @@ var appealDetailsVM = new Vue({
 					time : 3000,
 					shade : false
 				});
-				that.showAppealRecordPage();
-				that.refreshTable();
+				window.history.back(-1);
 			});
 		},
 

@@ -15,11 +15,11 @@ public class StartOrderTest {
 	 */
 	public static void main(String[] args) {
 
-		String merchantNum = "1001";
-		String merchantOrderNo = "dfjkrjekre3434";
-		Double amount = 300.1d;
-		String notifyUrl = "http://localhost:8082/platform-order";
-		String secretKey = "456";
+		String merchantNum = "201906001";
+		String merchantOrderNo = "20190629023134U936283877";
+		Double amount = 100d;
+		String notifyUrl = "http://xhbc10.com/index.php/Pay/Paynotify";
+		String secretKey = "l54x9426o68962464";
 		String sign = merchantNum + merchantOrderNo
 				+ new DecimalFormat("###################.###########").format(amount) + notifyUrl + secretKey;
 		System.out.println(sign);

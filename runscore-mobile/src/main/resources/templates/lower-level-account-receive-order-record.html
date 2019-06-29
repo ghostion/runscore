@@ -21,7 +21,7 @@
 	<div th:replace="common/header::html"></div>
 	<div id="LowerLevelAccountReceiveOrderRecord" v-cloak>
 		<div class="page-body" style="background: #f2f2f2;">
-			<div class="input-group">
+			<div class="input-group"　style="padding-top: 0.3rem;">
 				<input type="text" class="form-control" style="width: 8rem;" placeholder="用户名" v-model="userName"><select class="form-control" style="width: 2.2rem; height: 3rem;" v-model="orderState">
 					<option value="">订单状态</option>
 					<option v-for="dictItem in orderStateDictItems" :value="dictItem.dictItemCode">{{dictItem.dictItemName}}</option>
