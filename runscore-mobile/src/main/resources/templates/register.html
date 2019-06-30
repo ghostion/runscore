@@ -58,7 +58,7 @@
 			data : {
 				inviteRegisterFlag : false,
 				inviteCode : '',
-				inviteCodeReadonlyFlag : '',
+				inviteCodeReadonlyFlag : false,
 				userName : '',
 				realName : '',
 				loginPwd : '',
@@ -71,19 +71,17 @@
 			mounted : function() {
 				headerVM.title = '注册';
 				var inviteCode = window.sessionStorage.getItem('inviteCode');
-				if (inviteCode != null) {
+				if (inviteCode != null && inviteCode != '') {
 					this.inviteCode = inviteCode;
 					this.inviteCodeReadonlyFlag = true;
 				}
-				this.loadInviteRegisterSetting();
+				this.loadRegisterSetting();
 			},
 			methods : {
-				loadInviteRegisterSetting : function() {
+				loadRegisterSetting : function() {
 					var that = this;
-					that.$http.get('/masterControl/getInviteRegisterSetting').then(function(res) {
-						if (res.body.data != null) {
-							that.inviteRegisterFlag = res.body.data.enabled;
-						}
+					that.$http.get('/masterControl/getRegisterSetting').then(function(res) {
+						that.inviteRegisterFlag = res.body.data.inviteRegisterEnabled;
 					});
 				},
 

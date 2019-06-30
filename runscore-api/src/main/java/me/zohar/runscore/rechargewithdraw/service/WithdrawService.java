@@ -84,6 +84,13 @@ public class WithdrawService {
 
 		withdrawRecord.notApproved(note);
 		withdrawRecordRepo.save(withdrawRecord);
+
+		UserAccount userAccount = withdrawRecord.getUserAccount();
+		double cashDeposit = NumberUtil.round(userAccount.getCashDeposit() + withdrawRecord.getWithdrawAmount(), 4)
+				.doubleValue();
+		userAccount.setCashDeposit(cashDeposit);
+		userAccountRepo.save(userAccount);
+		accountChangeLogRepo.save(AccountChangeLog.buildWithWithdrawNotApprovedRefund(userAccount, withdrawRecord));
 	}
 
 	/**

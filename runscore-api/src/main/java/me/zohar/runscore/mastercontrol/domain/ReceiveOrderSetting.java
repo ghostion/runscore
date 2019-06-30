@@ -61,9 +61,9 @@ public class ReceiveOrderSetting {
 	private Date latelyUpdateTime;
 
 	public static ReceiveOrderSetting build() {
-		ReceiveOrderSetting platformOrderSetting = new ReceiveOrderSetting();
-		platformOrderSetting.setId(IdUtils.getId());
-		return platformOrderSetting;
+		ReceiveOrderSetting setting = new ReceiveOrderSetting();
+		setting.setId(IdUtils.getId());
+		return setting;
 	}
 
 }

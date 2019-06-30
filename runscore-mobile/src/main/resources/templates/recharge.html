@@ -119,6 +119,7 @@
 	line-height: 2rem;
 	margin-right: 0.7rem;
 	border-radius: 0.6rem;
+	margin-bottom: 0.4rem;
 }
 </style>
 </head>
@@ -191,15 +192,12 @@
 				</div>
 				<div class="row">
 					<div class="col-sm-9 offset-sm-3 recharge-form-item">
-						<div class="quick-input-amount" v-on:click="rechargeAmount = 100">100</div>
-						<div class="quick-input-amount" v-on:click="rechargeAmount = 300">300</div>
-						<div class="quick-input-amount" v-on:click="rechargeAmount = 500">500</div>
-						<div class="quick-input-amount" v-on:click="rechargeAmount = 5000">5000</div>
+						<div class="quick-input-amount" v-for="amount in quickInputAmount.split(',')" v-on:click="rechargeAmount = amount">{{amount}}</div>
 					</div>
 				</div>
 				<div class="row">
 					<div class="col-sm-9 offset-sm-3">
-						<div class="alert alert-light" style="font-size: 14px; padding-top: 0; padding-bottom: 0;">最低充值100元,最高充值50000元.单次充值额度:100~50000元</div>
+						<div class="alert alert-light" style="font-size: 14px; padding-top: 0; padding-bottom: 0;">{{rechargeExplain}}</div>
 					</div>
 				</div>
 				<div class="row">

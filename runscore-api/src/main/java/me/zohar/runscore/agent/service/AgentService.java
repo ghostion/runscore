@@ -45,8 +45,8 @@ import me.zohar.runscore.common.param.PageParam;
 import me.zohar.runscore.common.valid.ParamValid;
 import me.zohar.runscore.common.vo.PageResult;
 import me.zohar.runscore.constants.Constant;
-import me.zohar.runscore.mastercontrol.domain.InviteRegisterSetting;
-import me.zohar.runscore.mastercontrol.repo.InviteRegisterSettingRepo;
+import me.zohar.runscore.mastercontrol.domain.RegisterSetting;
+import me.zohar.runscore.mastercontrol.repo.RegisterSettingRepo;
 import me.zohar.runscore.useraccount.domain.UserAccount;
 import me.zohar.runscore.useraccount.repo.UserAccountRepo;
 
@@ -67,7 +67,7 @@ public class AgentService {
 	private InviteCodeRepo inviteCodeRepo;
 
 	@Autowired
-	private InviteRegisterSettingRepo inviteRegisterSettingRepo;
+	private RegisterSettingRepo inviteRegisterSettingRepo;
 
 	@Transactional(readOnly = true)
 	public List<RebateVO> findAllRebate() {
@@ -191,8 +191,8 @@ public class AgentService {
 	@ParamValid
 	@Transactional
 	public String generateInviteCode(GenerateInviteCodeParam param) {
-		InviteRegisterSetting setting = inviteRegisterSettingRepo.findTopByOrderByEnabled();
-		if (setting == null || !setting.getEnabled()) {
+		RegisterSetting setting = inviteRegisterSettingRepo.findTopByOrderByLatelyUpdateTime();
+		if (setting == null || !setting.getInviteRegisterEnabled()) {
 			throw new BizException(BizError.邀请注册功能已关闭);
 		}
 
@@ -200,7 +200,7 @@ public class AgentService {
 		while (inviteCodeRepo.findTopByCodeAndPeriodOfValidityGreaterThanEqual(code, new Date()) != null) {
 			code = IdUtil.fastSimpleUUID().substring(0, 6);
 		}
-		InviteCode newInviteCode = param.convertToPo(code, setting.getEffectiveDuration());
+		InviteCode newInviteCode = param.convertToPo(code, setting.getInviteCodeEffectiveDuration());
 		inviteCodeRepo.save(newInviteCode);
 		return newInviteCode.getId();
 	}

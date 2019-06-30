@@ -227,7 +227,10 @@ public class PageController {
 		return "lower-level-withdraw-details";
 	}
 	
-	
+	@GetMapping("/pay")
+	public String pay() {
+		return "pay";
+	}
 
 	@ResponseBody
 	@GetMapping("/paySuccessNotice")

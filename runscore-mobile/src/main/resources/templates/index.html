@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>码王子</title>
+<title></title>
 <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.1.0/css/bootstrap.min.css">
 <script src="https://cdn.staticfile.org/jquery/3.2.1/jquery.min.js"></script>
 <script src="https://cdn.staticfile.org/popper.js/1.12.5/umd/popper.min.js"></script>
@@ -173,15 +173,23 @@
 			created : function() {
 			},
 			mounted : function() {
-				headerVM.title = '码王子';
 				var inviteCode = getQueryString('inviteCode');
 				if (inviteCode != null) {
 					window.sessionStorage.setItem('inviteCode', inviteCode);
 				}
+				this.loadSystemSetting();
 				this.getUserAccountInfo();
 				this.loadTodayTop10BountyRank();
 			},
 			methods : {
+
+				loadSystemSetting : function() {
+					var that = this;
+					that.$http.get('/masterControl/getSystemSetting').then(function(res) {
+						document.title = res.body.data.websiteTitle;
+						headerVM.title = res.body.data.websiteTitle;
+					});
+				},
 
 				loadTodayTop10BountyRank : function() {
 					var that = this;

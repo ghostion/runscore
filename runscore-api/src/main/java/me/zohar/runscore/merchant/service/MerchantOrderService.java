@@ -528,7 +528,7 @@ public class MerchantOrderService {
 					predicates.add(builder.equal(root.get("gatheringChannelCode"), param.getGatheringChannelCode()));
 				}
 				if (StrUtil.isNotBlank(param.getReceiverUserName())) {
-					predicates.add(builder.equal(root.join("userAccount", JoinType.INNER).get("userName"),
+					predicates.add(builder.equal(root.join("receivedAccount", JoinType.INNER).get("userName"),
 							param.getReceiverUserName()));
 				}
 				if (param.getReceiveOrderTime() != null) {

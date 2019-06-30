@@ -12,6 +12,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import me.zohar.runscore.common.vo.Result;
 import me.zohar.runscore.mastercontrol.param.UpdateReceiveOrderSettingParam;
+import me.zohar.runscore.mastercontrol.param.UpdateRechargeSettingParam;
+import me.zohar.runscore.mastercontrol.param.UpdateRegisterSettingParam;
+import me.zohar.runscore.mastercontrol.param.UpdateSystemSettingParam;
 import me.zohar.runscore.mastercontrol.service.MasterControlService;
 
 /**
@@ -28,17 +31,29 @@ public class MasterControlController {
 	@Autowired
 	private MasterControlService service;
 
-	@GetMapping("/getInviteRegisterSetting")
+	@GetMapping("/getSystemSetting")
 	@ResponseBody
-	public Result getInviteRegisterSetting() {
-		return Result.success().setData(service.getInviteRegisterSetting());
+	public Result getSystemSetting() {
+		return Result.success().setData(service.getSystemSetting());
 	}
 
-	@PostMapping("/updateInviteRegisterSetting")
+	@PostMapping("/updateSystemSetting")
 	@ResponseBody
-	public Result updateInviteRegisterSetting(Double regitserDefaultRebate, Integer effectiveDuration,
-			Boolean enabled) {
-		service.updateInviteRegisterSetting(regitserDefaultRebate, effectiveDuration, enabled);
+	public Result updateSystemSetting(UpdateSystemSettingParam param) {
+		service.updateSystemSetting(param);
+		return Result.success();
+	}
+
+	@GetMapping("/getRegisterSetting")
+	@ResponseBody
+	public Result getRegisterSetting() {
+		return Result.success().setData(service.getRegisterSetting());
+	}
+
+	@PostMapping("/updateRegisterSetting")
+	@ResponseBody
+	public Result updateRegisterSetting(UpdateRegisterSettingParam param) {
+		service.updateRegisterSetting(param);
 		return Result.success();
 	}
 
@@ -63,9 +78,8 @@ public class MasterControlController {
 
 	@PostMapping("/updateRechargeSetting")
 	@ResponseBody
-	public Result updateRechargeSetting(Integer orderEffectiveDuration, Double returnWaterRate,
-			Boolean returnWaterRateEnabled) {
-		service.updateRechargeSetting(orderEffectiveDuration, returnWaterRate, returnWaterRateEnabled);
+	public Result updateRechargeSetting(UpdateRechargeSettingParam param) {
+		service.updateRechargeSetting(param);
 		return Result.success();
 	}
 

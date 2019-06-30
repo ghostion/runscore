@@ -100,7 +100,7 @@
 	<div id="myHomePage" v-cloak>
 		<div class="page-body">
 			<div class="login-or-register" v-show="!isLoggedInFlag">
-				<button type="button" class="btn btn-danger" v-on:click="footerVM.goTo('/login')">登录/注册</button>
+				<button type="button" class="btn btn-lg btn-danger" v-on:click="footerVM.goTo('/login')">{{loginOrRegisterTxt}}</button>
 			</div>
 			<div class="account-info" v-show="isLoggedInFlag">
 				<div class="user-name">
@@ -140,6 +140,7 @@
 		var myHomePageVM = new Vue({
 			el : '#myHomePage',
 			data : {
+				loginOrRegisterTxt : '',
 				isLoggedInFlag : false,
 				userName : '',
 				cashDeposit : '',
@@ -150,11 +151,19 @@
 			},
 			mounted : function() {
 				headerVM.title = '我的主页';
+				this.loadRegisterSetting();
 				this.getUserAccountInfo();
 			},
 			methods : {
 				goTo : function(url) {
 					window.location.href = url;
+				},
+
+				loadRegisterSetting : function() {
+					var that = this;
+					that.$http.get('/masterControl/getRegisterSetting').then(function(res) {
+						that.loginOrRegisterTxt = res.body.data.registerEnabled ? '登录/注册' : '登录';
+					});
 				},
 
 				/**

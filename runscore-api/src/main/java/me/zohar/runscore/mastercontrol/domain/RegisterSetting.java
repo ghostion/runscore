@@ -17,7 +17,7 @@ import lombok.Setter;
 import me.zohar.runscore.common.utils.IdUtils;
 
 /**
- * 邀请注册设置
+ * 注册设置
  * 
  * @author zohar
  * @date 2019年3月12日
@@ -28,10 +28,10 @@ import me.zohar.runscore.common.utils.IdUtils;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "invite_register_setting")
+@Table(name = "register_setting")
 @DynamicInsert(true)
 @DynamicUpdate(true)
-public class InviteRegisterSetting {
+public class RegisterSetting {
 
 	/**
 	 * 主键id
@@ -39,35 +39,36 @@ public class InviteRegisterSetting {
 	@Id
 	@Column(name = "id", length = 32)
 	private String id;
+	
+	/**
+	 * 是否开放注册功能
+	 */
+	private Boolean registerEnabled;
 
+	/**
+	 * 注册默认返点
+	 */
 	private Double regitserDefaultRebate;
 
 	/**
 	 * 邀请码有效时长
 	 */
-	private Integer effectiveDuration;
+	private Integer inviteCodeEffectiveDuration;
 
 	/**
-	 * 启用标识
+	 * 邀请码注册模式启用标识
 	 */
-	private Boolean enabled;
+	private Boolean inviteRegisterEnabled;
 
 	/**
 	 * 最近修改时间
 	 */
 	private Date latelyUpdateTime;
 
-	public void update(Double regitserDefaultRebate, Integer effectiveDuration, Boolean enabled) {
-		this.setRegitserDefaultRebate(regitserDefaultRebate);
-		this.setEffectiveDuration(effectiveDuration);
-		this.setEnabled(enabled);
-		this.setLatelyUpdateTime(new Date());
-	}
-
-	public static InviteRegisterSetting build() {
-		InviteRegisterSetting registerAmount = new InviteRegisterSetting();
-		registerAmount.setId(IdUtils.getId());
-		return registerAmount;
+	public static RegisterSetting build() {
+		RegisterSetting setting = new RegisterSetting();
+		setting.setId(IdUtils.getId());
+		return setting;
 	}
 
 }

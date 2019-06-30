@@ -262,7 +262,7 @@ public class AppealService {
 				}
 				if (StrUtil.isNotBlank(param.getReceiverUserName())) {
 					predicates.add(builder.equal(root.join("merchantOrder", JoinType.INNER)
-							.join("userAccount", JoinType.INNER).get("userName"), param.getReceiverUserName()));
+							.join("receivedAccount", JoinType.INNER).get("userName"), param.getReceiverUserName()));
 				}
 				if (StrUtil.isNotBlank(param.getAppealType())) {
 					predicates.add(builder.equal(root.get("appealType"), param.getAppealType()));

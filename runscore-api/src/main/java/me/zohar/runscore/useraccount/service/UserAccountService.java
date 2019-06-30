@@ -32,8 +32,8 @@ import me.zohar.runscore.common.exception.BizException;
 import me.zohar.runscore.common.valid.ParamValid;
 import me.zohar.runscore.common.vo.PageResult;
 import me.zohar.runscore.constants.Constant;
-import me.zohar.runscore.mastercontrol.domain.InviteRegisterSetting;
-import me.zohar.runscore.mastercontrol.repo.InviteRegisterSettingRepo;
+import me.zohar.runscore.mastercontrol.domain.RegisterSetting;
+import me.zohar.runscore.mastercontrol.repo.RegisterSettingRepo;
 import me.zohar.runscore.useraccount.domain.AccountChangeLog;
 import me.zohar.runscore.useraccount.domain.UserAccount;
 import me.zohar.runscore.useraccount.param.AccountChangeLogQueryCondParam;
@@ -69,7 +69,7 @@ public class UserAccountService {
 	private InviteCodeRepo inviteCodeRepo;
 
 	@Autowired
-	private InviteRegisterSettingRepo inviteRegisterSettingRepo;
+	private RegisterSettingRepo registerSettingRepo;
 
 	/**
 	 * 更新接单状态
@@ -249,8 +249,11 @@ public class UserAccountService {
 		param.setLoginPwd(new BCryptPasswordEncoder().encode(param.getLoginPwd()));
 		param.setMoneyPwd(new BCryptPasswordEncoder().encode(param.getMoneyPwd()));
 		UserAccount newUserAccount = param.convertToPo();
-		InviteRegisterSetting setting = inviteRegisterSettingRepo.findTopByOrderByEnabled();
-		if (setting.getEnabled()) {
+		RegisterSetting setting = registerSettingRepo.findTopByOrderByLatelyUpdateTime();
+		if (!setting.getRegisterEnabled()) {
+			throw new BizException(BizError.未开放注册功能);
+		}
+		if (setting.getInviteRegisterEnabled()) {
 			InviteCode inviteCode = inviteCodeRepo
 					.findTopByCodeAndPeriodOfValidityGreaterThanEqual(param.getInviteCode(), new Date());
 			if (inviteCode == null) {

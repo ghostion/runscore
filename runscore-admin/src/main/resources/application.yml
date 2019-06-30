@@ -2,7 +2,6 @@ server:
   port: 8081
   servlet:
     session:
-      timeout: 7200s
       cookie:
         name: sessionid_admin
 spring:
@@ -26,6 +25,9 @@ spring:
   redis:
     port: 6379
     host: localhost
+  session:
+    store-type: redis
+    timeout: 7200s
 redisson:
   singleServerConfig:
     address: 127.0.0.1:6379

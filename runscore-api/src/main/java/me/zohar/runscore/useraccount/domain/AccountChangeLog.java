@@ -219,7 +219,27 @@ public class AccountChangeLog {
 		log.setOrderNo(withdrawRecord.getOrderNo());
 		log.setAccountChangeTime(withdrawRecord.getSubmitTime());
 		log.setAccountChangeTypeCode(Constant.账变日志类型_账号提现);
-		log.setAccountChangeAmount(NumberUtil.round(withdrawRecord.getWithdrawAmount(), 4).doubleValue());
+		log.setAccountChangeAmount(-withdrawRecord.getWithdrawAmount());
+		log.setCashDeposit(userAccount.getCashDeposit());
+		log.setUserAccountId(userAccount.getId());
+		return log;
+	}
+
+	/**
+	 * 构建提现不符退款账变日志
+	 * 
+	 * @param userAccount
+	 * @param bettingOrder
+	 * @return
+	 */
+	public static AccountChangeLog buildWithWithdrawNotApprovedRefund(UserAccount userAccount,
+			WithdrawRecord withdrawRecord) {
+		AccountChangeLog log = new AccountChangeLog();
+		log.setId(IdUtils.getId());
+		log.setOrderNo(withdrawRecord.getOrderNo());
+		log.setAccountChangeTime(withdrawRecord.getApprovalTime());
+		log.setAccountChangeTypeCode(Constant.账变日志类型_提现不符退款);
+		log.setAccountChangeAmount(withdrawRecord.getWithdrawAmount());
 		log.setCashDeposit(userAccount.getCashDeposit());
 		log.setUserAccountId(userAccount.getId());
 		return log;

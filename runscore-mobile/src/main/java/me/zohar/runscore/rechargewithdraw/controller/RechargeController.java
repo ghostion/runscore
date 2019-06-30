@@ -53,7 +53,7 @@ public class RechargeController {
 	@RequestMapping("/findEnabledPayType")
 	@ResponseBody
 	public Result findEnabledPayType() throws IOException {
-		return Result.success().setData(payChannelService.findAllPayType());
+		return Result.success().setData(payChannelService.findEnabledPayType());
 	}
 
 	@RequestMapping("/findEnabledPayChannel")
