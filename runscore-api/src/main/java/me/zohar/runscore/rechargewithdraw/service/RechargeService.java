@@ -7,6 +7,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.validation.constraints.DecimalMin;
@@ -39,6 +40,7 @@ import me.zohar.runscore.mastercontrol.repo.RechargeSettingRepo;
 import me.zohar.runscore.rechargewithdraw.domain.PayChannel;
 import me.zohar.runscore.rechargewithdraw.domain.RechargeOrder;
 import me.zohar.runscore.rechargewithdraw.param.AbcyzfCallbackParam;
+import me.zohar.runscore.rechargewithdraw.param.LowerLevelRechargeOrderQueryCondParam;
 import me.zohar.runscore.rechargewithdraw.param.RechargeOrderParam;
 import me.zohar.runscore.rechargewithdraw.param.RechargeOrderQueryCondParam;
 import me.zohar.runscore.rechargewithdraw.repo.PayChannelRepo;
@@ -287,6 +289,54 @@ public class RechargeService {
 			RechargeOrder rechargeOrder = rechargeOrderRepo.getOne(id);
 			checkOrder(rechargeOrder.getOrderNo(), actualPayAmount, rechargeOrder.getDepositTime());
 		}
+	}
+
+	@Transactional(readOnly = true)
+	public PageResult<RechargeOrderVO> findLowerLevelRechargeOrderByPage(LowerLevelRechargeOrderQueryCondParam param) {
+		UserAccount currentAccount = userAccountRepo.getOne(param.getCurrentAccountId());
+		UserAccount lowerLevelAccount = currentAccount;
+		if (StrUtil.isNotBlank(param.getUserName())) {
+			lowerLevelAccount = userAccountRepo.findByUserName(param.getUserName());
+			if (lowerLevelAccount == null) {
+				throw new BizException(BizError.用户名不存在);
+			}
+			// 说明该用户名对应的账号不是当前账号的下级账号
+			if (!lowerLevelAccount.getAccountLevelPath().startsWith(currentAccount.getAccountLevelPath())) {
+				throw new BizException(BizError.不是上级账号无权查看该账号及下级的充值记录);
+			}
+		}
+		String lowerLevelAccountLevelPath = lowerLevelAccount.getAccountLevelPath();
+
+		Specification<RechargeOrder> spec = new Specification<RechargeOrder>() {
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
+			public Predicate toPredicate(Root<RechargeOrder> root, CriteriaQuery<?> query, CriteriaBuilder builder) {
+				List<Predicate> predicates = new ArrayList<Predicate>();
+				predicates.add(builder.like(root.join("userAccount", JoinType.INNER).get("accountLevelPath"),
+						lowerLevelAccountLevelPath + "%"));
+				if (StrUtil.isNotEmpty(param.getAccountType())) {
+					predicates.add(builder.equal(root.join("userAccount", JoinType.INNER).get("accountType"),
+							param.getAccountType()));
+				}
+				if (param.getSubmitStartTime() != null) {
+					predicates.add(builder.greaterThanOrEqualTo(root.get("submitTime").as(Date.class),
+							DateUtil.beginOfDay(param.getSubmitStartTime())));
+				}
+				if (param.getSubmitEndTime() != null) {
+					predicates.add(builder.lessThanOrEqualTo(root.get("submitTime").as(Date.class),
+							DateUtil.endOfDay(param.getSubmitEndTime())));
+				}
+				return predicates.size() > 0 ? builder.and(predicates.toArray(new Predicate[predicates.size()])) : null;
+			}
+		};
+		Page<RechargeOrder> result = rechargeOrderRepo.findAll(spec,
+				PageRequest.of(param.getPageNum() - 1, param.getPageSize(), Sort.by(Sort.Order.desc("submitTime"))));
+		PageResult<RechargeOrderVO> pageResult = new PageResult<>(RechargeOrderVO.convertFor(result.getContent()),
+				param.getPageNum(), param.getPageSize(), result.getTotalElements());
+		return pageResult;
 	}
 
 }

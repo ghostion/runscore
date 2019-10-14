@@ -11,7 +11,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import me.zohar.runscore.common.vo.Result;
-import me.zohar.runscore.mastercontrol.param.UpdatePlatformOrderSettingParam;
+import me.zohar.runscore.mastercontrol.param.UpdateReceiveOrderSettingParam;
+import me.zohar.runscore.mastercontrol.param.UpdateRechargeSettingParam;
+import me.zohar.runscore.mastercontrol.param.UpdateRegisterSettingParam;
+import me.zohar.runscore.mastercontrol.param.UpdateSystemSettingParam;
 import me.zohar.runscore.mastercontrol.service.MasterControlService;
 
 /**
@@ -28,29 +31,42 @@ public class MasterControlController {
 	@Autowired
 	private MasterControlService service;
 
-	@GetMapping("/getInviteRegisterSetting")
+	@GetMapping("/getSystemSetting")
 	@ResponseBody
-	public Result getInviteRegisterSetting() {
-		return Result.success().setData(service.getInviteRegisterSetting());
+	public Result getSystemSetting() {
+		return Result.success().setData(service.getSystemSetting());
 	}
 
-	@PostMapping("/updateInviteRegisterSetting")
+	@PostMapping("/updateSystemSetting")
 	@ResponseBody
-	public Result updateInviteRegisterSetting(Integer effectiveDuration, Boolean enabled) {
-		service.updateInviteRegisterSetting(effectiveDuration, enabled);
+	public Result updateSystemSetting(UpdateSystemSettingParam param) {
+		service.updateSystemSetting(param);
 		return Result.success();
 	}
 
-	@GetMapping("/getPlatformOrderSetting")
+	@GetMapping("/getRegisterSetting")
 	@ResponseBody
-	public Result getPlatformOrderSetting() {
-		return Result.success().setData(service.getPlatformOrderSetting());
+	public Result getRegisterSetting() {
+		return Result.success().setData(service.getRegisterSetting());
 	}
 
-	@PostMapping("/updatePlatformOrderSetting")
+	@PostMapping("/updateRegisterSetting")
 	@ResponseBody
-	public Result updatePlatformOrderSetting(UpdatePlatformOrderSettingParam param) {
-		service.updatePlatformOrderSetting(param);
+	public Result updateRegisterSetting(UpdateRegisterSettingParam param) {
+		service.updateRegisterSetting(param);
+		return Result.success();
+	}
+
+	@GetMapping("/getReceiveOrderSetting")
+	@ResponseBody
+	public Result getReceiveOrderSetting() {
+		return Result.success().setData(service.getReceiveOrderSetting());
+	}
+
+	@PostMapping("/updateReceiveOrderSetting")
+	@ResponseBody
+	public Result updateReceiveOrderSetting(UpdateReceiveOrderSettingParam param) {
+		service.updateReceiveOrderSetting(param);
 		return Result.success();
 	}
 
@@ -62,9 +78,8 @@ public class MasterControlController {
 
 	@PostMapping("/updateRechargeSetting")
 	@ResponseBody
-	public Result updateRechargeSetting(Integer orderEffectiveDuration, Double returnWaterRate,
-			Boolean returnWaterRateEnabled) {
-		service.updateRechargeSetting(orderEffectiveDuration, returnWaterRate, returnWaterRateEnabled);
+	public Result updateRechargeSetting(UpdateRechargeSettingParam param) {
+		service.updateRechargeSetting(param);
 		return Result.success();
 	}
 

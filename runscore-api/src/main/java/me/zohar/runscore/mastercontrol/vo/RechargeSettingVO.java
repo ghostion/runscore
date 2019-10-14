@@ -30,6 +30,16 @@ public class RechargeSettingVO {
 	private Boolean returnWaterRateEnabled;
 
 	/**
+	 * 快捷设置金额
+	 */
+	private String quickInputAmount;
+
+	/**
+	 * 充值说明
+	 */
+	private String rechargeExplain;
+
+	/**
 	 * 最近修改时间
 	 */
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")

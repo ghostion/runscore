@@ -8,7 +8,7 @@ public class PageController {
 
 	@GetMapping("/")
 	public String index() {
-		return "index";
+		return "statistical-analysis";
 	}
 
 	/**
@@ -151,6 +151,11 @@ public class PageController {
 		return "appeal-record";
 	}
 	
+	@GetMapping("/appeal-details")
+	public String appealDetails() {
+		return "appeal-details";
+	}
+	
 	@GetMapping("/pay-channel")
 	public String payChannel() {
 		return "pay-channel";
@@ -159,6 +164,16 @@ public class PageController {
 	@GetMapping("/login-log")
 	public String loginLog() {
 		return "login-log";
+	}
+	
+	/**
+	 * 返点表
+	 * 
+	 * @return
+	 */
+	@GetMapping("/rebate")
+	public String rebate() {
+		return "rebate";
 	}
 
 }

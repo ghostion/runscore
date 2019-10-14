@@ -15,6 +15,10 @@ var platformOrderVM = new Vue({
 		showAddOrderFlag : false,
 		gatheringChannelCodeWithAddOrder : '',
 		gatheringAmountWithAddOrder : '',
+		orderNoWithAddOrder : '',
+		notifyUrlWithAddOrder : '',
+		returnUrlWithAddOrder : '',
+		attchWithAddOrder : '',
 
 		showOrderDetailsFlag : false,
 		selectedOrderDetails : {},
@@ -147,12 +151,23 @@ var platformOrderVM = new Vue({
 					field : 'confirmTime',
 					title : '确认时间'
 				}, {
+					title : '通知状态',
+					formatter : function(value, row, index, field) {
+						return row.payInfo.noticeStateName;
+					}
+				}, {
 					title : '操作',
 					formatter : function(value, row, index) {
+						var btns = [];
+						btns.push('<button type="button" class="order-details-btn btn btn-outline-info btn-sm">订单详情</button>');
 						if (row.orderState == '1') {
-							return [ '<button type="button" class="order-details-btn btn btn-outline-info btn-sm" style="margin-right: 4px;">订单详情</button>', '<button type="button" class="cancel-order-btn btn btn-outline-danger btn-sm">取消订单</button>' ].join('');
-						} else {
-							return [ '<button type="button" class="order-details-btn btn btn-outline-info btn-sm">订单详情</button>' ].join('');
+							btns.push('<button type="button" class="cancel-order-btn btn btn-outline-danger btn-sm">取消订单</button>');
+						}
+						if (row.payInfo.noticeState == '3') {
+							btns.push('<button type="button" class="resend-notice-btn btn btn-outline-info btn-sm">重发通知</button>');
+						}
+						if (btns.length > 0) {
+							return btns.join('');
 						}
 					},
 					events : {
@@ -161,6 +176,9 @@ var platformOrderVM = new Vue({
 						},
 						'click .order-details-btn' : function(event, value, row, index) {
 							that.showOrderDetailsPage(row.id);
+						},
+						'click .resend-notice-btn' : function(event, value, row, index) {
+							that.resendNotice(row.id);
 						}
 					}
 				} ]
@@ -173,10 +191,41 @@ var platformOrderVM = new Vue({
 			});
 		},
 
+		resendNotice : function(id) {
+			var that = this;
+			layer.load(0, {
+				time : 8000,
+				shade : [ 0.1, '#fff' ]
+			});
+			that.$http.get('/merchantOrder/resendNotice', {
+				params : {
+					id : id
+				}
+			}).then(function(res) {
+				layer.closeAll('loading');
+				that.refreshTable();
+				var result = res.body.data;
+				if (result == null || result == '') {
+					result = '无内容';
+				}
+				layer.open({
+					type : 1,
+					anim : 2,
+					shadeClose : true,
+					area : [ '420px', '240px' ],
+					content : '<div style="padding: 10px;">' + '<p>返回内容</p>' + '<div style="color: red;">' + result + '</div>' + '</div>'
+				});
+			});
+		},
+
 		showAddOrderModal : function() {
 			this.showAddOrderFlag = true;
 			this.gatheringChannelCodeWithAddOrder = '';
 			this.gatheringAmountWithAddOrder = '';
+			this.orderNoWithAddOrder = '';
+			this.notifyUrlWithAddOrder = '';
+			this.returnUrlWithAddOrder = '';
+			this.attchWithAddOrder = '';
 		},
 
 		addOrder : function() {
@@ -190,7 +239,31 @@ var platformOrderVM = new Vue({
 				return;
 			}
 			if (that.gatheringAmountWithAddOrder == null || that.gatheringAmountWithAddOrder == '') {
-				layer.alert('请选择收款金额', {
+				layer.alert('请输入收款金额', {
+					title : '提示',
+					icon : 7,
+					time : 3000
+				});
+				return;
+			}
+			if (that.orderNoWithAddOrder == null || that.orderNoWithAddOrder == '') {
+				layer.alert('请输入商户订单号', {
+					title : '提示',
+					icon : 7,
+					time : 3000
+				});
+				return;
+			}
+			if (that.notifyUrlWithAddOrder == null || that.notifyUrlWithAddOrder == '') {
+				layer.alert('请输入异步通知地址', {
+					title : '提示',
+					icon : 7,
+					time : 3000
+				});
+				return;
+			}
+			if (that.returnUrlWithAddOrder == null || that.returnUrlWithAddOrder == '') {
+				layer.alert('请输入同步通知地址', {
 					title : '提示',
 					icon : 7,
 					time : 3000
@@ -199,7 +272,11 @@ var platformOrderVM = new Vue({
 			}
 			that.$http.post('/merchantOrder/startOrder', {
 				gatheringChannelCode : that.gatheringChannelCodeWithAddOrder,
-				gatheringAmount : that.gatheringAmountWithAddOrder
+				gatheringAmount : that.gatheringAmountWithAddOrder,
+				orderNo : that.orderNoWithAddOrder,
+				notifyUrl : that.notifyUrlWithAddOrder,
+				returnUrl : that.returnUrlWithAddOrder,
+				attch : that.attchWithAddOrder
 			}, {
 				emulateJSON : true
 			}).then(function(res) {
@@ -311,6 +388,14 @@ var platformOrderVM = new Vue({
 			if (that.appealType == '2') {
 				if (that.actualPayAmount == null || that.actualPayAmount == '') {
 					layer.alert('请输入实际支付金额', {
+						title : '提示',
+						icon : 7,
+						time : 3000
+					});
+					return;
+				}
+				if (that.selectedOrderDetails.gatheringAmount < that.actualPayAmount) {
+					layer.alert('实际支付金额须小于收款金额', {
 						title : '提示',
 						icon : 7,
 						time : 3000

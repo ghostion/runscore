@@ -23,12 +23,24 @@ public class MasterControlController {
 	@Autowired
 	private MasterControlService service;
 
-	@GetMapping("/getInviteRegisterSetting")
+	@GetMapping("/getRechargeSetting")
 	@ResponseBody
-	public Result getInviteRegisterSetting() {
-		return Result.success().setData(service.getInviteRegisterSetting());
+	public Result getRechargeSetting() {
+		return Result.success().setData(service.getRechargeSetting());
 	}
-	
+
+	@GetMapping("/getSystemSetting")
+	@ResponseBody
+	public Result getSystemSetting() {
+		return Result.success().setData(service.getSystemSetting());
+	}
+
+	@GetMapping("/getRegisterSetting")
+	@ResponseBody
+	public Result getRegisterSetting() {
+		return Result.success().setData(service.getRegisterSetting());
+	}
+
 	@GetMapping("/getCustomerQrcodeSetting")
 	@ResponseBody
 	public Result getCustomerQrcodeSetting() {

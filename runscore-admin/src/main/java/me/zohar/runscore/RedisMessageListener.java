@@ -13,6 +13,7 @@ import cn.hutool.core.util.StrUtil;
 import lombok.extern.slf4j.Slf4j;
 import me.zohar.runscore.common.utils.ThreadPoolUtils;
 import me.zohar.runscore.constants.Constant;
+import me.zohar.runscore.merchant.service.MerchantOrderService;
 import me.zohar.runscore.rechargewithdraw.service.RechargeService;
 
 @Slf4j
@@ -24,10 +25,14 @@ public class RedisMessageListener {
 
 	@Autowired
 	private RechargeService rechargeService;
-	
+
+	@Autowired
+	private MerchantOrderService merchantOrderService;
+
 	@PostConstruct
 	public void init() {
 		listenRechargeSettlement();
+		listenPaidMerchantOrder();
 	}
 
 	public void listenRechargeSettlement() {
@@ -50,6 +55,64 @@ public class RedisMessageListener {
 					});
 				} catch (Exception e) {
 					log.error("充值结算消息队列异常", e);
+				}
+			}
+		}).start();
+	}
+
+	public void listenPaidMerchantOrder() {
+		new Thread(() -> {
+			while (true) {
+				try {
+					String orderId = redisTemplate.opsForList().rightPop(Constant.商户订单ID, 1300L, TimeUnit.MILLISECONDS);
+					if (StrUtil.isBlank(orderId)) {
+						continue;
+					}
+
+					ThreadPoolUtils.getPaidMerchantOrderPool().execute(() -> {
+						try {
+							log.info("商户订单支付成功异步通知,id为{}", orderId);
+							merchantOrderService.paySuccessAsynNotice(orderId);
+						} catch (Exception e) {
+							log.error(MessageFormat.format("商户订单支付成功异步通知异常,id为{0}", orderId), e);
+							throw new RuntimeException();
+						}
+					});
+
+					ThreadPoolUtils.getPaidMerchantOrderPool().execute(() -> {
+						try {
+							log.info("系统通知该订单进行返点结算,id为{}", orderId);
+							merchantOrderService.noticeOrderRebateSettlement(orderId);
+						} catch (Exception e) {
+							log.error(MessageFormat.format("系统通知该订单进行返点结算异常,id为{0}", orderId), e);
+							throw new RuntimeException();
+						}
+					});
+				} catch (Exception e) {
+					log.error("商户订单ID消息队列异常", e);
+				}
+			}
+		}).start();
+
+		new Thread(() -> {
+			while (true) {
+				try {
+					String orderRebateId = redisTemplate.opsForList().rightPop(Constant.订单返点ID, 2L, TimeUnit.SECONDS);
+					if (StrUtil.isBlank(orderRebateId)) {
+						continue;
+					}
+
+					ThreadPoolUtils.getPaidMerchantOrderPool().execute(() -> {
+						try {
+							log.info("系统进行订单返点结算操作,id为{}", orderRebateId);
+							merchantOrderService.orderRebateSettlement(orderRebateId);
+						} catch (Exception e) {
+							log.error(MessageFormat.format("系统进行订单返点结算操作出现异常,id为{0}", orderRebateId), e);
+							throw new RuntimeException();
+						}
+					});
+				} catch (Exception e) {
+					log.error("订单返点结算消息队列异常", e);
 				}
 			}
 		}).start();

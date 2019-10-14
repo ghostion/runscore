@@ -13,15 +13,18 @@ var appealRecordVM = new Vue({
 		appealProcessWay : '',
 		appealProcessWayDictItems : [],
 		initiationStartTime : dayjs().format('YYYY-MM-DD'),
-		initiationEndTime : dayjs().format('YYYY-MM-DD'),
-
-		showAppealRecordFlag : true,
-		selectAppeal : {}
+		initiationEndTime : dayjs().format('YYYY-MM-DD')
 	},
 	computed : {},
 	created : function() {
 	},
 	mounted : function() {
+		var appealState = getQueryString('appealState');
+		if (appealState == '1') {
+			this.appealState = appealState;
+			this.initiationStartTime = '';
+			this.initiationEndTime = '';
+		}
 		this.loadGatheringChannelDictItem();
 		this.loadAppealTypeDictItem();
 		this.loadAppealStateDictItem();
@@ -154,7 +157,7 @@ var appealRecordVM = new Vue({
 					},
 					events : {
 						'click .deal-btn' : function(event, value, row, index) {
-							that.showViewDetailsPage(row);
+							window.location.href = '/appeal-details?id=' + row.id;
 						}
 					}
 				} ]
@@ -165,95 +168,6 @@ var appealRecordVM = new Vue({
 			$('.appeal-record-table').bootstrapTable('refreshOptions', {
 				pageNumber : 1
 			});
-		},
-
-		showAppealRecordPage : function() {
-			this.showAppealRecordFlag = true;
-		},
-
-		showViewDetailsPage : function(appeal) {
-			this.showAppealRecordFlag = false;
-			this.selectAppeal = appeal;
-		},
-
-		dontProcess : function(appealId) {
-			var that = this;
-			that.$http.get('/appeal/dontProcess', {
-				params : {
-					appealId : appealId
-				}
-			}).then(function(res) {
-				layer.alert('操作成功!', {
-					icon : 1,
-					time : 3000,
-					shade : false
-				});
-				that.showAppealRecordPage();
-				that.refreshTable();
-			});
-		},
-
-		cancelOrder : function(appealId) {
-			var that = this;
-			that.$http.get('/appeal/cancelOrder', {
-				params : {
-					appealId : appealId
-				}
-			}).then(function(res) {
-				layer.alert('操作成功!', {
-					icon : 1,
-					time : 3000,
-					shade : false
-				});
-				that.showAppealRecordPage();
-				that.refreshTable();
-			});
-		},
-
-		alterToActualPayAmount : function(appealId) {
-			var that = this;
-			that.$http.get('/appeal/alterToActualPayAmount', {
-				params : {
-					appealId : appealId
-				}
-			}).then(function(res) {
-				layer.alert('操作成功!', {
-					icon : 1,
-					time : 3000,
-					shade : false
-				});
-				that.showAppealRecordPage();
-				that.refreshTable();
-			});
-		},
-
-		confirmToPaid : function(appealId) {
-			var that = this;
-			that.$http.get('/appeal/confirmToPaid', {
-				params : {
-					appealId : appealId
-				}
-			}).then(function(res) {
-				layer.alert('操作成功!', {
-					icon : 1,
-					time : 3000,
-					shade : false
-				});
-				that.showAppealRecordPage();
-				that.refreshTable();
-			});
-		},
-
-		viewImage : function(imagePath) {
-			var image = new Image();
-			image.src = imagePath;
-			var viewer = new Viewer(image, {
-				hidden : function() {
-					viewer.destroy();
-				},
-			});
-			viewer.show();
 		}
-
 	}
 });

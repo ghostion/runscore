@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import me.zohar.runscore.common.vo.Result;
+import me.zohar.runscore.dictconfig.ConfigHolder;
 import me.zohar.runscore.dictconfig.DictHolder;
 
 @Controller
@@ -16,6 +17,12 @@ public class DictConfigController {
 	@ResponseBody
 	public Result findDictItemInCache(String dictTypeCode) {
 		return Result.success().setData(DictHolder.findDictItem(dictTypeCode));
+	}
+	
+	@GetMapping("/findConfigValueInCache")
+	@ResponseBody
+	public Result findConfigValueInCache(String configItemCode) {
+		return Result.success().setData(ConfigHolder.getConfigValue(configItemCode));
 	}
 
 }

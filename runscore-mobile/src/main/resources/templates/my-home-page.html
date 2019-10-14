@@ -17,7 +17,8 @@
 .login-or-register {
 	text-align: center;
 	background-color: #dc3545 !important;
-	border-top: 0.001rem solid #e64f5d; padding-top : 1rem;
+	border-top: 0.001rem solid #e64f5d;
+	padding-top: 1rem;
 	padding-bottom: 1rem;
 	border-top: 0.001rem solid #e64f5d;
 	padding-top: 1rem;
@@ -99,7 +100,7 @@
 	<div id="myHomePage" v-cloak>
 		<div class="page-body">
 			<div class="login-or-register" v-show="!isLoggedInFlag">
-				<button type="button" class="btn btn-danger" v-on:click="footerVM.goTo('/login')">登录/注册</button>
+				<button type="button" class="btn btn-lg btn-danger" v-on:click="footerVM.goTo('/login')">{{loginOrRegisterTxt}}</button>
 			</div>
 			<div class="account-info" v-show="isLoggedInFlag">
 				<div class="user-name">
@@ -116,18 +117,19 @@
 			</div>
 			<div>
 				<nav class="navbar bg-light footer-navbar home-page-nav">
-					<a class="navbar-brand footer-navbar-brand" v-on:click="footerVM.goTo('/recharge')"><i class="fa fa-jpy" aria-hidden="true"></i> <span>充值</span> </a> 
-					<a class="navbar-brand footer-navbar-brand" v-on:click="footerVM.goTo('/withdraw')"><i class="fa fa-money" aria-hidden="true"></i> <span>提现</span> </a>
-					<a class="navbar-brand footer-navbar-brand" v-on:click="footerVM.goTo('/gathering-code')"><i class="fa fa-qrcode" aria-hidden="true"></i> <span>收款码</span> </a>
+					<a class="navbar-brand footer-navbar-brand" v-on:click="footerVM.goTo('/recharge')"><i class="fa fa-jpy" aria-hidden="true"></i> <span>充值</span> </a> <a class="navbar-brand footer-navbar-brand" v-on:click="footerVM.goTo('/withdraw')"><i class="fa fa-money" aria-hidden="true"></i> <span>提现</span> </a> <a class="navbar-brand footer-navbar-brand" v-on:click="footerVM.goTo('/recharge-withdraw-log')"><i class="fa fa-hdd-o" aria-hidden="true"></i> <span>个人充提</span> </a>
 				</nav>
 				<nav class="navbar bg-light footer-navbar home-page-nav">
-					<a class="navbar-brand footer-navbar-brand" v-on:click="footerVM.goTo('/receive-order-record')"><i class="fa fa-list-ul" aria-hidden="true"></i> <span>接单记录</span> </a> 
-					<a class="navbar-brand footer-navbar-brand" v-on:click="footerVM.goTo('/appeal-record')"><i class="fa fa-clock-o" aria-hidden="true"></i> <span>申诉记录</span> </a> 
+					<a class="navbar-brand footer-navbar-brand" v-on:click="footerVM.goTo('/gathering-code')"><i class="fa fa-qrcode" aria-hidden="true"></i> <span>收款码</span> </a> <a class="navbar-brand footer-navbar-brand" v-on:click="footerVM.goTo('/receive-order-record')"><i class="fa fa-list-ul" aria-hidden="true"></i> <span>接单记录</span> </a> <a class="navbar-brand footer-navbar-brand" v-on:click="footerVM.goTo('/appeal-record')"><i class="fa fa-clock-o" aria-hidden="true"></i> <span>申诉记录</span> </a>
+				</nav>
+				<nav class="navbar bg-light footer-navbar home-page-nav">
 					<a class="navbar-brand footer-navbar-brand" v-on:click="footerVM.goTo('/personal-account-change')"><i class="fa fa-book" aria-hidden="true"></i> <span>个人帐变</span> </a>
 				</nav>
 			</div>
 			<ul class="list-group">
-				<li class="list-group-item" v-on:click="footerVM.goTo('/online-customer')">在线客服 <span><i aria-hidden="true" class="fa fa-angle-right"></i></span>
+				<li class="list-group-item" v-show="isLoggedInFlag && accountType == 'agent'" v-on:click="footerVM.goTo('/agent-center')">代理中心<span><i aria-hidden="true" class="fa fa-angle-right"></i></span>
+				</li>
+				<li class="list-group-item" v-on:click="footerVM.goTo('/online-customer')">在线客服<span><i aria-hidden="true" class="fa fa-angle-right"></i></span>
 				</li>
 				<li class="list-group-item logout-group-item" v-show="isLoggedInFlag" v-on:click="logout">退出登录<span><i aria-hidden="true" class="fa fa-angle-right"></i></span></li>
 			</ul>
@@ -138,21 +140,30 @@
 		var myHomePageVM = new Vue({
 			el : '#myHomePage',
 			data : {
+				loginOrRegisterTxt : '',
 				isLoggedInFlag : false,
 				userName : '',
 				cashDeposit : '',
-				commission : ''
+				accountType : ''
 			},
 			computed : {},
 			created : function() {
 			},
 			mounted : function() {
 				headerVM.title = '我的主页';
+				this.loadRegisterSetting();
 				this.getUserAccountInfo();
 			},
 			methods : {
 				goTo : function(url) {
 					window.location.href = url;
+				},
+
+				loadRegisterSetting : function() {
+					var that = this;
+					that.$http.get('/masterControl/getRegisterSetting').then(function(res) {
+						that.loginOrRegisterTxt = res.body.data.registerEnabled ? '登录/注册' : '登录';
+					});
 				},
 
 				/**
@@ -165,7 +176,7 @@
 							that.isLoggedInFlag = true;
 							that.userName = res.body.data.userName;
 							that.cashDeposit = res.body.data.cashDeposit;
-							that.commission = res.body.data.commission;
+							that.accountType = res.body.data.accountType;
 						}
 					});
 				},

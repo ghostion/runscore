@@ -54,6 +54,16 @@ public class RechargeSetting {
 	 * 充值返水率启用标识
 	 */
 	private Boolean returnWaterRateEnabled;
+	
+	/**
+	 * 快捷设置金额
+	 */
+	private String quickInputAmount;
+	
+	/**
+	 * 充值说明
+	 */
+	private String rechargeExplain;
 
 	/**
 	 * 最近修改时间
@@ -68,9 +78,9 @@ public class RechargeSetting {
 	}
 
 	public static RechargeSetting build() {
-		RechargeSetting rechargeSetting = new RechargeSetting();
-		rechargeSetting.setId(IdUtils.getId());
-		return rechargeSetting;
+		RechargeSetting setting = new RechargeSetting();
+		setting.setId(IdUtils.getId());
+		return setting;
 	}
 
 }

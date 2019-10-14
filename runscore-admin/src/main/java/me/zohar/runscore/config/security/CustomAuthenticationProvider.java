@@ -37,23 +37,32 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
 		String username = token.getName();
 		LoginAccountInfoVO loginAccountInfo = userAccountService.getLoginAccountInfo(username);
 		if (loginAccountInfo == null) {
-			loginLogService.recordLoginLog(username, Constant.登录状态_失败, Constant.登录提示_用户名不存在,
+			loginLogService.recordLoginLog(username, Constant.系统_后台管理, Constant.登录状态_失败, Constant.登录提示_用户名不存在,
 					HttpUtil.getClientIP(request), UserAgentUtil.parse(request.getHeader("User-Agent")));
 			throw new AuthenticationServiceException("用户名或密码不正确");
 		}
 		if (!Constant.账号类型_管理员.equals(loginAccountInfo.getAccountType())) {
-			loginLogService.recordLoginLog(loginAccountInfo.getUserName(), Constant.登录状态_失败, Constant.登录提示_不是管理员无法登陆后台,
-					HttpUtil.getClientIP(request), UserAgentUtil.parse(request.getHeader("User-Agent")));
+			loginLogService.recordLoginLog(loginAccountInfo.getUserName(), Constant.系统_后台管理, Constant.登录状态_失败,
+					Constant.登录提示_不是管理员无法登陆后台, HttpUtil.getClientIP(request),
+					UserAgentUtil.parse(request.getHeader("User-Agent")));
 			throw new AuthenticationServiceException(Constant.登录提示_不是管理员无法登陆后台);
 		}
 		if (!new BCryptPasswordEncoder().matches(token.getCredentials().toString(), loginAccountInfo.getLoginPwd())) {
-			loginLogService.recordLoginLog(loginAccountInfo.getUserName(), Constant.登录状态_失败, Constant.登录提示_用户名或密码不正确,
-					HttpUtil.getClientIP(request), UserAgentUtil.parse(request.getHeader("User-Agent")));
+			loginLogService.recordLoginLog(loginAccountInfo.getUserName(), Constant.系统_后台管理, Constant.登录状态_失败,
+					Constant.登录提示_用户名或密码不正确, HttpUtil.getClientIP(request),
+					UserAgentUtil.parse(request.getHeader("User-Agent")));
 			throw new AuthenticationServiceException(Constant.登录提示_用户名或密码不正确);
 		}
+		if (Constant.账号状态_禁用.equals(loginAccountInfo.getState())) {
+			loginLogService.recordLoginLog(loginAccountInfo.getUserName(), Constant.系统_后台管理, Constant.登录状态_失败,
+					Constant.登录提示_账号已被禁用, HttpUtil.getClientIP(request),
+					UserAgentUtil.parse(request.getHeader("User-Agent")));
+			throw new AuthenticationServiceException(Constant.登录提示_账号已被禁用);
+		}
 
-		loginLogService.recordLoginLog(loginAccountInfo.getUserName(), Constant.登录状态_成功, Constant.登录提示_登录成功,
-				HttpUtil.getClientIP(request), UserAgentUtil.parse(request.getHeader("User-Agent")));
+		loginLogService.recordLoginLog(loginAccountInfo.getUserName(), Constant.系统_后台管理, Constant.登录状态_成功,
+				Constant.登录提示_登录成功, HttpUtil.getClientIP(request),
+				UserAgentUtil.parse(request.getHeader("User-Agent")));
 		userAccountService.updateLatelyLoginTime(loginAccountInfo.getId());
 		UserAccountDetails userAccountDetails = new UserAccountDetails(loginAccountInfo);
 		return new UsernamePasswordAuthenticationToken(userAccountDetails, userAccountDetails.getPassword(),

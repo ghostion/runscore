@@ -19,7 +19,7 @@
 }
 
 .master-control-room-row .card-body {
-	height: 190px;
+	height: 230px;
 	padding-left: 2.25rem;
 }
 
@@ -64,33 +64,60 @@
 		<div class="row master-control-room-row">
 			<div class="col-sm-4">
 				<div class="card">
-					<div class="card-header">邀请注册</div>
+					<div class="card-header">系统设置</div>
 					<div class="card-body">
 						<div class="row">
 							<div class="col-sm-12">
-								<label>邀请码有效时长</label> <span><input type="text" class="form-control-sm master-control-room-input" v-model="inviteCodeEffectiveDuration">天</span>
+								<label>网站标题</label> <span><input type="text" class="form-control-sm master-control-room-input" v-model="websiteTitle"></span>
+							</div>
+						</div>
+						<button type="button" class="btn btn-success btn-sm" v-on:click="updateSystemSetting">更新</button>
+					</div>
+				</div>
+			</div>
+			<div class="col-sm-4">
+				<div class="card">
+					<div class="card-header">注册设置</div>
+					<div class="card-body">
+						<div class="row">
+							<div class="col-sm-12">
+								<label>&nbsp;</label> <span>
+									<div class="custom-control custom-switch custom-control-inline">
+										<input type="checkbox" class="custom-control-input" id="registerEnabled" v-model="registerEnabled"> <label class="custom-control-label" for="registerEnabled">开放注册功能</label>
+									</div>
+								</span>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-sm-12">
+								<label>注册默认返点</label> <span><input type="text" class="form-control-sm master-control-room-input" v-model="regitserDefaultRebate">%</span>
 							</div>
 						</div>
 						<div class="row">
 							<div class="col-sm-12">
 								<label>&nbsp;</label> <span>
 									<div class="custom-control custom-switch custom-control-inline">
-										<input type="checkbox" class="custom-control-input" id="inviteRegisterEnabled" v-model="inviteRegisterEnabled"> <label class="custom-control-label" for="inviteRegisterEnabled">{{inviteRegisterEnabled ? '启用' : '关闭'}}</label>
+										<input type="checkbox" class="custom-control-input" id="inviteRegisterEnabled" v-model="inviteRegisterEnabled"> <label class="custom-control-label" for="inviteRegisterEnabled">启用邀请码注册模式</label>
 									</div>
 								</span>
 							</div>
 						</div>
-						<button type="button" class="btn btn-success btn-sm" v-on:click="updateInviteRegisterSetting">更新</button>
+						<div class="row">
+							<div class="col-sm-12">
+								<label>邀请码有效时长</label> <span><input type="text" class="form-control-sm master-control-room-input" v-model="inviteCodeEffectiveDuration">天</span>
+							</div>
+						</div>
+						<button type="button" class="btn btn-success btn-sm" v-on:click="updateRegisterSetting">更新</button>
 					</div>
 				</div>
 			</div>
 			<div class="col-sm-4">
 				<div class="card">
-					<div class="card-header">商户订单</div>
+					<div class="card-header">接单设置</div>
 					<div class="card-body">
 						<div class="row">
 							<div class="col-sm-12">
-								<label>接单有效时长</label> <span><input type="text" class="form-control-sm master-control-room-input" v-model="orderReceiveEffectiveDuration">分钟</span>
+								<label>接单有效时长</label> <span><input type="text" class="form-control-sm master-control-room-input" v-model="receiveOrderEffectiveDuration">分钟</span>
 							</div>
 						</div>
 						<div class="row">
@@ -100,10 +127,12 @@
 						</div>
 						<div class="row">
 							<div class="col-sm-12">
-								<label>接单返水率</label> <span><input type="text" class="form-control-sm master-control-room-input" v-model="receiveOrderReturnWaterRate">%</span>
-								<div class="custom-control custom-switch custom-control-inline">
-									<input type="checkbox" class="custom-control-input" id="receiveOrderReturnWaterRateEnabled" v-model="receiveOrderReturnWaterRateEnabled"> <label class="custom-control-label" for="receiveOrderReturnWaterRateEnabled">{{receiveOrderReturnWaterRateEnabled ? '启用' : '关闭'}}</label>
-								</div>
+								<label>接单数量上限</label> <span><input type="text" class="form-control-sm master-control-room-input" v-model="receiveOrderUpperLimit">单</span>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-sm-12">
+								<label>保证金最低要求</label> <span><input type="text" class="form-control-sm master-control-room-input" v-model="cashDepositMinimumRequire">元</span>
 							</div>
 						</div>
 						<div class="row">
@@ -113,10 +142,13 @@
 								</div>
 							</div>
 						</div>
-						<button type="button" class="btn btn-success btn-sm" v-on:click="updatePlatformOrderSetting">更新</button>
+						<button type="button" class="btn btn-success btn-sm" v-on:click="updateReceiveOrderSetting">更新</button>
 					</div>
 				</div>
 			</div>
+		</div>
+
+		<div class="row master-control-room-row">
 			<div class="col-sm-4">
 				<div class="card">
 					<div class="card-header">充值</div>
@@ -134,13 +166,20 @@
 								</div>
 							</div>
 						</div>
+						<div class="row">
+							<div class="col-sm-12">
+								<label>快捷录入金额</label> <span><input type="text" class="form-control-sm master-control-room-input" style="width: 70%;" v-model="quickInputAmount"></span>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-sm-12">
+								<label>充值说明</label> <span><input type="text" class="form-control-sm master-control-room-input" style="width: 70%;" v-model="rechargeExplain"></span>
+							</div>
+						</div>
 						<button type="button" class="btn btn-success btn-sm" v-on:click="updateRechargeSetting">更新</button>
 					</div>
 				</div>
 			</div>
-		</div>
-
-		<div class="row master-control-room-row">
 			<div class="col-sm-4">
 				<div class="card">
 					<div class="card-header">客服二维码</div>

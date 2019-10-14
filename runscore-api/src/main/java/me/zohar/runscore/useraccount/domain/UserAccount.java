@@ -20,6 +20,7 @@ import org.hibernate.annotations.NotFoundAction;
 
 import lombok.Getter;
 import lombok.Setter;
+import me.zohar.runscore.agent.domain.InviteCode;
 
 /**
  * 用户账号
@@ -59,6 +60,21 @@ public class UserAccount {
 	private String accountType;
 
 	/**
+	 * 账号级别
+	 */
+	private Integer accountLevel;
+
+	/**
+	 * 账号级别路径
+	 */
+	private String accountLevelPath;
+
+	/**
+	 * 返点
+	 */
+	private Double rebate;
+
+	/**
 	 * 登录密码
 	 */
 	private String loginPwd;
@@ -72,7 +88,7 @@ public class UserAccount {
 	 * 保证金
 	 */
 	private Double cashDeposit;
-	
+
 	/**
 	 * 状态
 	 */
@@ -107,7 +123,7 @@ public class UserAccount {
 	 * 银行资料最近修改时间
 	 */
 	private Date bankInfoLatelyModifyTime;
-	
+
 	/**
 	 * 接单状态
 	 */
@@ -122,7 +138,7 @@ public class UserAccount {
 	/**
 	 * 邀请人
 	 */
-	@NotFound(action=NotFoundAction.IGNORE)
+	@NotFound(action = NotFoundAction.IGNORE)
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "inviter_id", updatable = false, insertable = false, foreignKey = @ForeignKey(value = ConstraintMode.NO_CONSTRAINT))
 	private UserAccount inviter;
@@ -132,5 +148,13 @@ public class UserAccount {
 	 */
 	@Version
 	private Long version;
+
+	public void updateInviteInfo(InviteCode inviteCode) {
+		this.setInviterId(inviteCode.getInviterId());
+		this.setAccountLevel(inviteCode.getInviter().getAccountLevel() + 1);
+		this.setAccountLevelPath(inviteCode.getInviter().getAccountLevelPath() + "." + this.getId());
+		this.setAccountType(inviteCode.getAccountType());
+		this.setRebate(inviteCode.getRebate());
+	}
 
 }

@@ -18,6 +18,13 @@ public class LoginLogVO {
 
 	private String id;
 
+	/**
+	 * 登录系统
+	 */
+	private String system;
+
+	private String systemName;
+
 	private String state;
 
 	private String stateName;
@@ -54,6 +61,7 @@ public class LoginLogVO {
 		}
 		LoginLogVO vo = new LoginLogVO();
 		BeanUtils.copyProperties(loginLog, vo);
+		vo.setSystemName(DictHolder.getDictItemName("system", vo.getSystem()));
 		vo.setStateName(DictHolder.getDictItemName("loginState", vo.getState()));
 		return vo;
 	}

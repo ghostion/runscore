@@ -6,6 +6,7 @@ import java.util.List;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.validation.constraints.NotBlank;
@@ -24,17 +25,23 @@ import org.springframework.validation.annotation.Validated;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.StrUtil;
+import me.zohar.runscore.agent.domain.InviteCode;
+import me.zohar.runscore.agent.repo.InviteCodeRepo;
 import me.zohar.runscore.common.exception.BizError;
 import me.zohar.runscore.common.exception.BizException;
 import me.zohar.runscore.common.valid.ParamValid;
 import me.zohar.runscore.common.vo.PageResult;
 import me.zohar.runscore.constants.Constant;
+import me.zohar.runscore.mastercontrol.domain.RegisterSetting;
+import me.zohar.runscore.mastercontrol.repo.RegisterSettingRepo;
 import me.zohar.runscore.useraccount.domain.AccountChangeLog;
 import me.zohar.runscore.useraccount.domain.UserAccount;
 import me.zohar.runscore.useraccount.param.AccountChangeLogQueryCondParam;
 import me.zohar.runscore.useraccount.param.AddUserAccountParam;
 import me.zohar.runscore.useraccount.param.AdjustCashDepositParam;
 import me.zohar.runscore.useraccount.param.BindBankInfoParam;
+import me.zohar.runscore.useraccount.param.LowerLevelAccountChangeLogQueryCondParam;
+import me.zohar.runscore.useraccount.param.LowerLevelAccountQueryCondParam;
 import me.zohar.runscore.useraccount.param.ModifyLoginPwdParam;
 import me.zohar.runscore.useraccount.param.ModifyMoneyPwdParam;
 import me.zohar.runscore.useraccount.param.UserAccountEditParam;
@@ -51,15 +58,18 @@ import me.zohar.runscore.useraccount.vo.UserAccountInfoVO;
 @Validated
 @Service
 public class UserAccountService {
-	
-	@Autowired
-	private InviteCodeService inviteCodeService;
 
 	@Autowired
 	private UserAccountRepo userAccountRepo;
 
 	@Autowired
 	private AccountChangeLogRepo accountChangeLogRepo;
+
+	@Autowired
+	private InviteCodeRepo inviteCodeRepo;
+
+	@Autowired
+	private RegisterSettingRepo registerSettingRepo;
 
 	/**
 	 * 更新接单状态
@@ -91,8 +101,13 @@ public class UserAccountService {
 		if (existUserAccount != null && !existUserAccount.getId().equals(param.getUserAccountId())) {
 			throw new BizException(BizError.用户名已存在);
 		}
-
 		UserAccount userAccount = userAccountRepo.getOne(param.getUserAccountId());
+		if (userAccount.getInviter() != null) {
+			// 校验下级账号的返点不能大于上级账号
+			if (param.getRebate() > userAccount.getInviter().getRebate()) {
+				throw new BizException(BizError.下级账号的返点不能大于上级账号);
+			}
+		}
 		BeanUtils.copyProperties(param, userAccount);
 		userAccountRepo.save(userAccount);
 	}
@@ -203,13 +218,18 @@ public class UserAccountService {
 		String encodePwd = new BCryptPasswordEncoder().encode(param.getLoginPwd());
 		param.setLoginPwd(encodePwd);
 		UserAccount newUserAccount = param.convertToPo();
-		newUserAccount.setCashDeposit(0d);
 		if (StrUtil.isNotBlank(param.getInviterUserName())) {
 			UserAccount inviter = userAccountRepo.findByUserName(param.getInviterUserName());
 			if (inviter == null) {
 				throw new BizException(BizError.邀请人不存在);
 			}
+			// 校验下级账号的返点不能大于上级账号
+			if (param.getRebate() > inviter.getRebate()) {
+				throw new BizException(BizError.下级账号的返点不能大于上级账号);
+			}
 			newUserAccount.setInviterId(inviter.getId());
+			newUserAccount.setAccountLevel(inviter.getAccountLevel() + 1);
+			newUserAccount.setAccountLevelPath(inviter.getAccountLevelPath() + "." + newUserAccount.getId());
 		}
 		userAccountRepo.save(newUserAccount);
 	}
@@ -221,16 +241,28 @@ public class UserAccountService {
 	 */
 	@ParamValid
 	@Transactional
-	public void userAccountRegister(UserAccountRegisterParam param) {
+	public void register(UserAccountRegisterParam param) {
 		UserAccount userAccount = userAccountRepo.findByUserName(param.getUserName());
 		if (userAccount != null) {
 			throw new BizException(BizError.用户名已存在);
 		}
-		String encodePwd = new BCryptPasswordEncoder().encode(param.getLoginPwd());
-		param.setLoginPwd(encodePwd);
+		param.setLoginPwd(new BCryptPasswordEncoder().encode(param.getLoginPwd()));
+		param.setMoneyPwd(new BCryptPasswordEncoder().encode(param.getMoneyPwd()));
 		UserAccount newUserAccount = param.convertToPo();
-		newUserAccount.setCashDeposit(0d);
-		newUserAccount.setInviterId(inviteCodeService.confirmCodeAndGetInviterId(param.getInviteCode(), newUserAccount.getId()));
+		RegisterSetting setting = registerSettingRepo.findTopByOrderByLatelyUpdateTime();
+		if (!setting.getRegisterEnabled()) {
+			throw new BizException(BizError.未开放注册功能);
+		}
+		if (setting.getInviteRegisterEnabled()) {
+			InviteCode inviteCode = inviteCodeRepo
+					.findTopByCodeAndPeriodOfValidityGreaterThanEqual(param.getInviteCode(), new Date());
+			if (inviteCode == null) {
+				throw new BizException(BizError.邀请码不存在或已失效);
+			}
+			newUserAccount.updateInviteInfo(inviteCode);
+		} else {
+			newUserAccount.setRebate(setting.getRegitserDefaultRebate());
+		}
 		userAccountRepo.save(newUserAccount);
 	}
 
@@ -295,6 +327,104 @@ public class UserAccountService {
 			accountChangeLogRepo.save(
 					AccountChangeLog.buildWithHandworkAdjustCashDeposit(userAccount, -param.getAccountChangeAmount()));
 		}
+	}
+
+	@ParamValid
+	@Transactional(readOnly = true)
+	public PageResult<UserAccountDetailsInfoVO> findLowerLevelAccountDetailsInfoByPage(
+			LowerLevelAccountQueryCondParam param) {
+		UserAccount currentAccount = userAccountRepo.getOne(param.getCurrentAccountId());
+		UserAccount lowerLevelAccount = currentAccount;
+		if (StrUtil.isNotBlank(param.getUserName())) {
+			lowerLevelAccount = userAccountRepo.findByUserName(param.getUserName());
+			if (lowerLevelAccount == null) {
+				throw new BizException(BizError.用户名不存在);
+			}
+			// 说明该用户名对应的账号不是当前账号的下级账号
+			if (!lowerLevelAccount.getAccountLevelPath().startsWith(currentAccount.getAccountLevelPath())) {
+				throw new BizException(BizError.不是上级账号无权查看该账号及下级的账号信息);
+			}
+		}
+		String lowerLevelAccountId = lowerLevelAccount.getId();
+		String lowerLevelAccountLevelPath = lowerLevelAccount.getAccountLevelPath();
+
+		Specification<UserAccount> spec = new Specification<UserAccount>() {
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
+			public Predicate toPredicate(Root<UserAccount> root, CriteriaQuery<?> query, CriteriaBuilder builder) {
+				List<Predicate> predicates = new ArrayList<Predicate>();
+				if (Constant.下级账号查询范围_指定账号及直接下级.equals(param.getQueryScope())) {
+					Predicate predicate1 = builder.equal(root.get("id"), lowerLevelAccountId);
+					Predicate predicate2 = builder.equal(root.get("inviterId"), lowerLevelAccountId);
+					predicates.add(builder.or(predicate1, predicate2));
+				} else {
+					predicates.add(builder.like(root.get("accountLevelPath"), lowerLevelAccountLevelPath + "%"));
+				}
+				return predicates.size() > 0 ? builder.and(predicates.toArray(new Predicate[predicates.size()])) : null;
+			}
+		};
+		Page<UserAccount> result = userAccountRepo.findAll(spec,
+				PageRequest.of(param.getPageNum() - 1, param.getPageSize(), Sort.by(Sort.Order.asc("registeredTime"))));
+		PageResult<UserAccountDetailsInfoVO> pageResult = new PageResult<>(
+				UserAccountDetailsInfoVO.convertFor(result.getContent()), param.getPageNum(), param.getPageSize(),
+				result.getTotalElements());
+		return pageResult;
+	}
+
+	@Transactional(readOnly = true)
+	public PageResult<AccountChangeLogVO> findLowerLevelAccountChangeLogByPage(
+			LowerLevelAccountChangeLogQueryCondParam param) {
+		UserAccount currentAccount = userAccountRepo.getOne(param.getCurrentAccountId());
+		UserAccount lowerLevelAccount = currentAccount;
+		if (StrUtil.isNotBlank(param.getUserName())) {
+			lowerLevelAccount = userAccountRepo.findByUserName(param.getUserName());
+			if (lowerLevelAccount == null) {
+				throw new BizException(BizError.用户名不存在);
+			}
+			// 说明该用户名对应的账号不是当前账号的下级账号
+			if (!lowerLevelAccount.getAccountLevelPath().startsWith(currentAccount.getAccountLevelPath())) {
+				throw new BizException(BizError.不是上级账号无权查看该账号及下级的帐变日志);
+			}
+		}
+		String lowerLevelAccountId = lowerLevelAccount.getId();
+		String lowerLevelAccountLevelPath = lowerLevelAccount.getAccountLevelPath();
+
+		Specification<AccountChangeLog> spec = new Specification<AccountChangeLog>() {
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
+			public Predicate toPredicate(Root<AccountChangeLog> root, CriteriaQuery<?> query, CriteriaBuilder builder) {
+				List<Predicate> predicates = new ArrayList<Predicate>();
+				if (StrUtil.isNotBlank(param.getUserName())) {
+					predicates.add(builder.equal(root.get("userAccountId"), lowerLevelAccountId));
+				} else {
+					predicates.add(builder.like(root.join("userAccount", JoinType.INNER).get("accountLevelPath"),
+							lowerLevelAccountLevelPath + "%"));
+				}
+				if (param.getStartTime() != null) {
+					predicates.add(builder.greaterThanOrEqualTo(root.get("accountChangeTime").as(Date.class),
+							DateUtil.beginOfDay(param.getStartTime())));
+				}
+				if (param.getEndTime() != null) {
+					predicates.add(builder.lessThanOrEqualTo(root.get("accountChangeTime").as(Date.class),
+							DateUtil.endOfDay(param.getEndTime())));
+				}
+				if (StrUtil.isNotBlank(param.getAccountChangeTypeCode())) {
+					predicates.add(builder.equal(root.get("accountChangeTypeCode"), param.getAccountChangeTypeCode()));
+				}
+				return predicates.size() > 0 ? builder.and(predicates.toArray(new Predicate[predicates.size()])) : null;
+			}
+		};
+		Page<AccountChangeLog> result = accountChangeLogRepo.findAll(spec, PageRequest.of(param.getPageNum() - 1,
+				param.getPageSize(), Sort.by(Sort.Order.desc("accountChangeTime"))));
+		PageResult<AccountChangeLogVO> pageResult = new PageResult<>(AccountChangeLogVO.convertFor(result.getContent()),
+				param.getPageNum(), param.getPageSize(), result.getTotalElements());
+		return pageResult;
 	}
 
 }

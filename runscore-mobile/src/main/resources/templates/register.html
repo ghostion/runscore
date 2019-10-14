@@ -17,6 +17,7 @@
 <style type="text/css">
 .register-container {
 	padding-top: 2rem;
+	padding-bottom: 1rem;
 }
 </style>
 </head>
@@ -28,7 +29,7 @@
 			<div class="container register-container">
 				<form>
 					<div class="form-group" v-if="inviteRegisterFlag">
-						<label>邀请码:</label> <input type="text" class="form-control" v-model="inviteCode" placeholder="请输入邀请码">
+						<label>邀请码:</label> <input type="text" class="form-control" placeholder="请输入邀请码" v-model="inviteCode" :disabled="inviteCodeReadonlyFlag">
 					</div>
 					<div class="form-group">
 						<label>用户名:</label> <input type="text" class="form-control" placeholder="以字母开头,长度为6-12个字母和数字!" v-model="userName">
@@ -37,10 +38,13 @@
 						<label>真实姓名:</label> <input type="text" class="form-control" placeholder="必须与提款银行卡姓名一致,否则无法出款" v-model="realName">
 					</div>
 					<div class="form-group">
-						<label>登录密码:</label> <input type="password" class="form-control" placeholder="6-15位字母数字混合,且不能全为字母或数字!" v-model="password">
+						<label>登录密码:</label> <input type="password" class="form-control" placeholder="6-15位字母数字混合,且不能全为字母或数字!" v-model="loginPwd">
 					</div>
 					<div class="form-group">
-						<label>确认密码:</label> <input type="password" class="form-control" placeholder="确认密码" v-model="confirmPassword">
+						<label>确认登录密码:</label> <input type="password" class="form-control" placeholder="确认密码" v-model="confirmLoginPwd">
+					</div>
+					<div class="form-group">
+						<label>资金密码:</label> <input type="password" class="form-control" placeholder="6-15位字母数字混合,且不能全为字母或数字!" v-model="moneyPwd">
 					</div>
 					<button type="button" class="btn btn-danger btn-lg btn-block" v-on:click="registerAndLogin">注册并登录</button>
 				</form>
@@ -54,25 +58,30 @@
 			data : {
 				inviteRegisterFlag : false,
 				inviteCode : '',
+				inviteCodeReadonlyFlag : false,
 				userName : '',
 				realName : '',
-				password : '',
-				confirmPassword : ''
+				loginPwd : '',
+				confirmLoginPwd : '',
+				moneyPwd : ''
 			},
 			computed : {},
 			created : function() {
 			},
 			mounted : function() {
 				headerVM.title = '注册';
-				this.loadInviteRegisterSetting();
+				var inviteCode = window.sessionStorage.getItem('inviteCode');
+				if (inviteCode != null && inviteCode != '') {
+					this.inviteCode = inviteCode;
+					this.inviteCodeReadonlyFlag = true;
+				}
+				this.loadRegisterSetting();
 			},
 			methods : {
-				loadInviteRegisterSetting : function() {
+				loadRegisterSetting : function() {
 					var that = this;
-					that.$http.get('/masterControl/getInviteRegisterSetting').then(function(res) {
-						if (res.body.data != null) {
-							that.inviteRegisterFlag = res.body.data.enabled;
-						}
+					that.$http.get('/masterControl/getRegisterSetting').then(function(res) {
+						that.inviteRegisterFlag = res.body.data.inviteRegisterEnabled;
 					});
 				},
 
@@ -98,34 +107,43 @@
 						layer.alert('请输入真实姓名');
 						return;
 					}
-					if (that.password == null || that.password == '') {
+					if (that.loginPwd == null || that.loginPwd == '') {
 						layer.alert('请输入登录密码');
 						return;
 					}
-					if (that.confirmPassword == null || that.confirmPassword == '') {
-						layer.alert('请输入确认密码');
+					if (that.confirmLoginPwd == null || that.confirmLoginPwd == '') {
+						layer.alert('请再次确认登录密码');
 						return;
 					}
-					if (that.password != that.confirmPassword) {
-						layer.alert('密码不一致');
+					if (that.loginPwd != that.confirmLoginPwd) {
+						layer.alert('登录密码不一致');
 						return;
 					}
 					var passwordPatt = /^[A-Za-z][A-Za-z0-9]{5,14}$/;
-					if (!passwordPatt.test(that.password)) {
-						layer.alert('密码不合法!请输入以字母开头,长度为6-15个字母和数字的密码');
+					if (!passwordPatt.test(that.loginPwd)) {
+						layer.alert('登录密码不合法!请输入以字母开头,长度为6-15个字母和数字的密码');
+						return;
+					}
+					if (that.moneyPwd == null || that.moneyPwd == '') {
+						layer.alert('请输入资金密码');
+						return;
+					}
+					if (!passwordPatt.test(that.moneyPwd)) {
+						layer.alert('资金密码不合法!请输入以字母开头,长度为6-15个字母和数字的密码');
 						return;
 					}
 					that.$http.post('/userAccount/register', {
 						inviteCode : that.inviteCode,
 						userName : that.userName,
 						realName : that.realName,
-						loginPwd : that.password
+						loginPwd : that.loginPwd,
+						moneyPwd : that.moneyPwd
 					}, {
 						emulateJSON : true
 					}).then(function(res) {
 						that.$http.post('/login', {
 							username : that.userName,
-							password : that.password
+							password : that.loginPwd
 						}, {
 							emulateJSON : true
 						}).then(function(res) {

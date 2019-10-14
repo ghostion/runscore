@@ -7,8 +7,6 @@ import me.zohar.runscore.merchant.domain.Merchant;
 
 public interface MerchantRepo extends JpaRepository<Merchant, String>, JpaSpecificationExecutor<Merchant> {
 
-	Merchant findBySecretKey(String secretKey);
-
 	Merchant findByRelevanceAccountId(String relevanceAccountId);
 
 	Merchant findByName(String name);

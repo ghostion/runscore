@@ -5,10 +5,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
-import javax.validation.constraints.DecimalMin;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,18 +18,24 @@ import org.springframework.validation.annotation.Validated;
 import lombok.extern.slf4j.Slf4j;
 import me.zohar.runscore.common.valid.ParamValid;
 import me.zohar.runscore.mastercontrol.domain.CustomerQrcodeSetting;
-import me.zohar.runscore.mastercontrol.domain.InviteRegisterSetting;
-import me.zohar.runscore.mastercontrol.domain.PlatformOrderSetting;
+import me.zohar.runscore.mastercontrol.domain.ReceiveOrderSetting;
 import me.zohar.runscore.mastercontrol.domain.RechargeSetting;
-import me.zohar.runscore.mastercontrol.param.UpdatePlatformOrderSettingParam;
+import me.zohar.runscore.mastercontrol.domain.RegisterSetting;
+import me.zohar.runscore.mastercontrol.domain.SystemSetting;
+import me.zohar.runscore.mastercontrol.param.UpdateReceiveOrderSettingParam;
+import me.zohar.runscore.mastercontrol.param.UpdateRechargeSettingParam;
+import me.zohar.runscore.mastercontrol.param.UpdateRegisterSettingParam;
+import me.zohar.runscore.mastercontrol.param.UpdateSystemSettingParam;
 import me.zohar.runscore.mastercontrol.repo.CustomerQrcodeSettingRepo;
-import me.zohar.runscore.mastercontrol.repo.InviteRegisterSettingRepo;
-import me.zohar.runscore.mastercontrol.repo.PlatformOrderSettingRepo;
+import me.zohar.runscore.mastercontrol.repo.ReceiveOrderSettingRepo;
 import me.zohar.runscore.mastercontrol.repo.RechargeSettingRepo;
+import me.zohar.runscore.mastercontrol.repo.RegisterSettingRepo;
+import me.zohar.runscore.mastercontrol.repo.SystemSettingRepo;
 import me.zohar.runscore.mastercontrol.vo.CustomerQrcodeSettingVO;
-import me.zohar.runscore.mastercontrol.vo.InviteRegisterSettingVO;
-import me.zohar.runscore.mastercontrol.vo.PlatformOrderSettingVO;
+import me.zohar.runscore.mastercontrol.vo.ReceiveOrderSettingVO;
 import me.zohar.runscore.mastercontrol.vo.RechargeSettingVO;
+import me.zohar.runscore.mastercontrol.vo.RegisterSettingVO;
+import me.zohar.runscore.mastercontrol.vo.SystemSettingVO;
 
 @Validated
 @Service
@@ -42,10 +46,10 @@ public class MasterControlService {
 	private StringRedisTemplate redisTemplate;
 
 	@Autowired
-	private PlatformOrderSettingRepo platformOrderSettingRepo;
+	private ReceiveOrderSettingRepo receiveOrderSettingRepo;
 
 	@Autowired
-	private InviteRegisterSettingRepo inviteRegisterSettingRepo;
+	private RegisterSettingRepo registerSettingRepo;
 
 	@Autowired
 	private RechargeSettingRepo rechargeSettingRepo;
@@ -53,39 +57,61 @@ public class MasterControlService {
 	@Autowired
 	private CustomerQrcodeSettingRepo customerQrcodeSettingRepo;
 
-	@Transactional(readOnly = true)
-	public InviteRegisterSettingVO getInviteRegisterSetting() {
-		InviteRegisterSetting setting = inviteRegisterSettingRepo.findTopByOrderByEnabled();
-		return InviteRegisterSettingVO.convertFor(setting);
-	}
-
-	@Transactional
-	public void updateInviteRegisterSetting(
-			@NotNull @DecimalMin(value = "0", inclusive = true) Integer effectiveDuration, @NotNull Boolean enabled) {
-		InviteRegisterSetting setting = inviteRegisterSettingRepo.findTopByOrderByEnabled();
-		if (setting == null) {
-			setting = InviteRegisterSetting.build();
-		}
-		setting.update(effectiveDuration, enabled);
-		inviteRegisterSettingRepo.save(setting);
-	}
+	@Autowired
+	private SystemSettingRepo systemSettingRepo;
 
 	@Transactional(readOnly = true)
-	public PlatformOrderSettingVO getPlatformOrderSetting() {
-		PlatformOrderSetting setting = platformOrderSettingRepo.findTopByOrderByLatelyUpdateTime();
-		return PlatformOrderSettingVO.convertFor(setting);
+	public SystemSettingVO getSystemSetting() {
+		SystemSetting setting = systemSettingRepo.findTopByOrderByLatelyUpdateTime();
+		return SystemSettingVO.convertFor(setting);
 	}
 
 	@ParamValid
 	@Transactional
-	public void updatePlatformOrderSetting(UpdatePlatformOrderSettingParam param) {
-		PlatformOrderSetting setting = platformOrderSettingRepo.findTopByOrderByLatelyUpdateTime();
+	public void updateSystemSetting(UpdateSystemSettingParam param) {
+		SystemSetting setting = systemSettingRepo.findTopByOrderByLatelyUpdateTime();
 		if (setting == null) {
-			setting = PlatformOrderSetting.build();
+			setting = SystemSetting.build();
 		}
 		BeanUtils.copyProperties(param, setting);
 		setting.setLatelyUpdateTime(new Date());
-		platformOrderSettingRepo.save(setting);
+		systemSettingRepo.save(setting);
+	}
+
+	@Transactional(readOnly = true)
+	public RegisterSettingVO getRegisterSetting() {
+		RegisterSetting setting = registerSettingRepo.findTopByOrderByLatelyUpdateTime();
+		return RegisterSettingVO.convertFor(setting);
+	}
+
+	@ParamValid
+	@Transactional
+	public void updateRegisterSetting(UpdateRegisterSettingParam param) {
+		RegisterSetting setting = registerSettingRepo.findTopByOrderByLatelyUpdateTime();
+		if (setting == null) {
+			setting = RegisterSetting.build();
+		}
+		BeanUtils.copyProperties(param, setting);
+		setting.setLatelyUpdateTime(new Date());
+		registerSettingRepo.save(setting);
+	}
+
+	@Transactional(readOnly = true)
+	public ReceiveOrderSettingVO getReceiveOrderSetting() {
+		ReceiveOrderSetting setting = receiveOrderSettingRepo.findTopByOrderByLatelyUpdateTime();
+		return ReceiveOrderSettingVO.convertFor(setting);
+	}
+
+	@ParamValid
+	@Transactional
+	public void updateReceiveOrderSetting(UpdateReceiveOrderSettingParam param) {
+		ReceiveOrderSetting setting = receiveOrderSettingRepo.findTopByOrderByLatelyUpdateTime();
+		if (setting == null) {
+			setting = ReceiveOrderSetting.build();
+		}
+		BeanUtils.copyProperties(param, setting);
+		setting.setLatelyUpdateTime(new Date());
+		receiveOrderSettingRepo.save(setting);
 	}
 
 	@Transactional(readOnly = true)
@@ -94,19 +120,18 @@ public class MasterControlService {
 		return RechargeSettingVO.convertFor(setting);
 	}
 
+	@ParamValid
 	@Transactional
-	public void updateRechargeSetting(
-			@NotNull @DecimalMin(value = "0", inclusive = true) Integer orderEffectiveDuration,
-			@NotNull @DecimalMin(value = "0", inclusive = true) Double returnWaterRate,
-			@NotNull Boolean returnWaterRateEnabled) {
+	public void updateRechargeSetting(UpdateRechargeSettingParam param) {
 		RechargeSetting setting = rechargeSettingRepo.findTopByOrderByLatelyUpdateTime();
 		if (setting == null) {
 			setting = RechargeSetting.build();
 		}
-		setting.update(orderEffectiveDuration, returnWaterRate, returnWaterRateEnabled);
+		BeanUtils.copyProperties(param, setting);
+		setting.setLatelyUpdateTime(new Date());
 		rechargeSettingRepo.save(setting);
 	}
-	
+
 	@Transactional(readOnly = true)
 	public CustomerQrcodeSettingVO getCustomerQrcodeSetting() {
 		CustomerQrcodeSetting setting = customerQrcodeSettingRepo.findTopByOrderByLatelyUpdateTime();

@@ -5,6 +5,7 @@ import java.io.IOException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import me.zohar.runscore.common.vo.Result;
 import me.zohar.runscore.config.security.UserAccountDetails;
 import me.zohar.runscore.rechargewithdraw.param.AbcyzfCallbackParam;
+import me.zohar.runscore.rechargewithdraw.param.LowerLevelRechargeOrderQueryCondParam;
 import me.zohar.runscore.rechargewithdraw.param.RechargeOrderParam;
 import me.zohar.runscore.rechargewithdraw.service.PayChannelService;
 import me.zohar.runscore.rechargewithdraw.service.RechargeService;
@@ -51,13 +53,22 @@ public class RechargeController {
 	@RequestMapping("/findEnabledPayType")
 	@ResponseBody
 	public Result findEnabledPayType() throws IOException {
-		return Result.success().setData(payChannelService.findAllPayType());
+		return Result.success().setData(payChannelService.findEnabledPayType());
 	}
 
 	@RequestMapping("/findEnabledPayChannel")
 	@ResponseBody
 	public Result findEnabledPayChannel() throws IOException {
 		return Result.success().setData(payChannelService.findEnabledPayChannel());
+	}
+
+	@GetMapping("/findLowerLevelRechargeOrderByPage")
+	@ResponseBody
+	public Result findLowerLevelRechargeOrderByPage(LowerLevelRechargeOrderQueryCondParam param) {
+		UserAccountDetails user = (UserAccountDetails) SecurityContextHolder.getContext().getAuthentication()
+				.getPrincipal();
+		param.setCurrentAccountId(user.getUserAccountId());
+		return Result.success().setData(rechargeService.findLowerLevelRechargeOrderByPage(param));
 	}
 
 }

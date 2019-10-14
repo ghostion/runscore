@@ -125,15 +125,30 @@ var platformOrderVM = new Vue({
 					field : 'confirmTime',
 					title : '确认时间'
 				}, {
+					title : '通知状态',
+					formatter : function(value, row, index, field) {
+						return row.payInfo.noticeStateName;
+					}
+				}, {
 					title : '操作',
 					formatter : function(value, row, index) {
+						var btns = [];
 						if (row.orderState == '1') {
-							return [ '<button type="button" class="cancel-order-btn btn btn-outline-danger btn-sm">取消订单</button>' ].join('');
+							btns.push('<button type="button" class="cancel-order-btn btn btn-outline-danger btn-sm">取消订单</button>');
+						}
+						if (row.payInfo.noticeState == '3') {
+							btns.push('<button type="button" class="resend-notice-btn btn btn-outline-info btn-sm">重发通知</button>');
+						}
+						if (btns.length > 0) {
+							return btns.join('');
 						}
 					},
 					events : {
 						'click .cancel-order-btn' : function(event, value, row, index) {
 							that.cancelOrder(row.id);
+						},
+						'click .resend-notice-btn' : function(event, value, row, index) {
+							that.resendNotice(row.id);
 						}
 					}
 				} ]
@@ -164,6 +179,33 @@ var platformOrderVM = new Vue({
 						shade : false
 					});
 					that.refreshTable();
+				});
+			});
+		},
+
+		resendNotice : function(id) {
+			var that = this;
+			layer.load(0, {
+				time : 8000,
+				shade : [ 0.1, '#fff' ]
+			});
+			that.$http.get('/platformOrder/resendNotice', {
+				params : {
+					id : id
+				}
+			}).then(function(res) {
+				layer.closeAll('loading');
+				that.refreshTable();
+				var result = res.body.data;
+				if (result == null || result == '') {
+					result = '无内容';
+				}
+				layer.open({
+					type : 1,
+					anim : 2,
+					shadeClose : true,
+					area : [ '420px', '240px' ],
+					content : '<div style="padding: 10px;">' + '<p>返回内容</p>' + '<div style="color: red;">' + result + '</div>' + '</div>'
 				});
 			});
 		},

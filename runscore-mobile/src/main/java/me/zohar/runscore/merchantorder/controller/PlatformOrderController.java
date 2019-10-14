@@ -9,7 +9,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import me.zohar.runscore.common.vo.Result;
 import me.zohar.runscore.config.security.UserAccountDetails;
-import me.zohar.runscore.merchant.param.MerchantOrderQueryCondParam;
+import me.zohar.runscore.merchant.param.LowerLevelAccountReceiveOrderQueryCondParam;
+import me.zohar.runscore.merchant.param.MyReceiveOrderRecordQueryCondParam;
 import me.zohar.runscore.merchant.service.MerchantOrderService;
 
 @Controller
@@ -18,7 +19,7 @@ public class PlatformOrderController {
 
 	@Autowired
 	private MerchantOrderService platformOrderService;
-	
+
 	@GetMapping("/userConfirmToPaid")
 	@ResponseBody
 	public Result userConfirmToPaid(String orderId) {
@@ -27,7 +28,7 @@ public class PlatformOrderController {
 		platformOrderService.userConfirmToPaid(user.getUserAccountId(), orderId);
 		return Result.success();
 	}
-	
+
 	@GetMapping("/findMyWaitConfirmOrder")
 	@ResponseBody
 	public Result findMyWaitConfirmOrder() {
@@ -52,14 +53,23 @@ public class PlatformOrderController {
 		platformOrderService.receiveOrder(user.getUserAccountId(), orderId);
 		return Result.success();
 	}
-	
+
 	@GetMapping("/findMyReceiveOrderRecordByPage")
 	@ResponseBody
-	public Result findMyReceiveOrderRecordByPage(MerchantOrderQueryCondParam param) {
+	public Result findMyReceiveOrderRecordByPage(MyReceiveOrderRecordQueryCondParam param) {
 		UserAccountDetails user = (UserAccountDetails) SecurityContextHolder.getContext().getAuthentication()
 				.getPrincipal();
 		param.setReceiverUserName(user.getUsername());
-		return Result.success().setData(platformOrderService.findMerchantOrderByPage(param));
+		return Result.success().setData(platformOrderService.findMyReceiveOrderRecordByPage(param));
+	}
+
+	@GetMapping("/findLowerLevelAccountReceiveOrderRecordByPage")
+	@ResponseBody
+	public Result findLowerLevelAccountReceiveOrderRecordByPage(LowerLevelAccountReceiveOrderQueryCondParam param) {
+		UserAccountDetails user = (UserAccountDetails) SecurityContextHolder.getContext().getAuthentication()
+				.getPrincipal();
+		param.setCurrentAccountId(user.getUserAccountId());
+		return Result.success().setData(platformOrderService.findLowerLevelAccountReceiveOrderRecordByPage(param));
 	}
 
 }

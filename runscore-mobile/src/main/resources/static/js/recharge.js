@@ -1,6 +1,8 @@
 var rechargeVM = new Vue({
 	el : '#recharge',
 	data : {
+		quickInputAmount : '',
+		rechargeExplain : '',
 		payTypes : [],
 		selectedPayType : {},
 		payChannels : [],
@@ -24,17 +26,34 @@ var rechargeVM = new Vue({
 				shade : false
 			});
 		});
+		this.loadRechargeSetting();
 		this.loadPayType();
 		this.loadPayChannel();
 
 	},
 	methods : {
 
+		loadRechargeSetting : function() {
+			var that = this;
+			that.$http.get('/masterControl/getRechargeSetting').then(function(res) {
+				that.quickInputAmount = res.body.data.quickInputAmount;
+				that.rechargeExplain = res.body.data.rechargeExplain;
+			});
+		},
+
 		loadPayType : function() {
 			var that = this;
 			that.$http.get('/recharge/findEnabledPayType').then(function(res) {
 				that.payTypes = res.body.data;
-				that.selectedPayType = that.payTypes[0];
+				if (that.payTypes.length > 0) {
+					that.selectedPayType = that.payTypes[0];
+				} else {
+					layer.alert('暂没有可用的充值通道', {
+						title : '提示',
+						icon : 7,
+						time : 3000
+					});
+				}
 			});
 		},
 

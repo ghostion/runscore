@@ -59,14 +59,14 @@ var accountChangeLogVM = new Vue({
 					};
 				},
 				columns : [ {
-					field : 'accountChangeTypeName',
-					title : '帐变类型'
-				}, {
 					field : 'userName',
-					title : '帐变用户'
+					title : '用户名'
 				}, {
 					field : 'orderNo',
 					title : '订单号'
+				}, {
+					field : 'accountChangeTypeName',
+					title : '帐变类型'
 				}, {
 					field : 'accountChangeTime',
 					title : '账变时间'

@@ -109,6 +109,8 @@ public class MerchantOrderVO {
 
 	private String payUrl;
 
+	private MerchantOrderPayInfoVO payInfo;
+
 	public static List<MerchantOrderVO> convertFor(List<MerchantOrder> platformOrders) {
 		if (CollectionUtil.isEmpty(platformOrders)) {
 			return new ArrayList<>();
@@ -131,10 +133,11 @@ public class MerchantOrderVO {
 		if (merchantOrder.getMerchant() != null) {
 			vo.setPlatformName(merchantOrder.getMerchant().getName());
 		}
-		if (StrUtil.isNotBlank(vo.getReceivedAccountId()) && merchantOrder.getUserAccount() != null) {
-			vo.setReceiverUserName(merchantOrder.getUserAccount().getUserName());
+		if (StrUtil.isNotBlank(merchantOrder.getReceivedAccountId()) && merchantOrder.getReceivedAccount() != null) {
+			vo.setReceiverUserName(merchantOrder.getReceivedAccount().getUserName());
 		}
 		vo.setPayUrl(ConfigHolder.getConfigValue("merchantOrderPayUrl") + vo.getOrderNo());
+		vo.setPayInfo(MerchantOrderPayInfoVO.convertFor(merchantOrder.getPayInfo()));
 		return vo;
 	}
 

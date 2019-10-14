@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>码王子</title>
+<title></title>
 <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.1.0/css/bootstrap.min.css">
 <script src="https://cdn.staticfile.org/jquery/3.2.1/jquery.min.js"></script>
 <script src="https://cdn.staticfile.org/popper.js/1.12.5/umd/popper.min.js"></script>
@@ -12,6 +12,7 @@
 <script src="https://cdn.staticfile.org/vue-resource/1.5.1/vue-resource.min.js"></script>
 <link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
 <link href="/css/common/common.css" rel="stylesheet" type="text/css">
+<script src="/js/common/common.js"></script>
 <style type="text/css">
 .gathering-item {
 	
@@ -72,6 +73,11 @@
 							<label>奖励金</label> <span>{{todayReceiveOrderSituation != null ? todayReceiveOrderSituation.bounty : 0}}元</span>
 						</div>
 					</div>
+					<div class="row gathering-item" v-show="accountType == 'agent'">
+						<div class="col-sm-8 offset-sm-4">
+							<label>代理佣金</label> <span>{{todayReceiveOrderSituation != null ? todayReceiveOrderSituation.rebateAmount : 0}}元</span>
+						</div>
+					</div>
 				</div>
 			</div>
 			<div class="card" v-show="isLoggedInFlag && !showTodayReceiveOrderSituationFlag">
@@ -92,6 +98,11 @@
 					<div class="row gathering-item">
 						<div class="col-sm-8 offset-sm-4">
 							<label>奖励金</label> <span>{{totalReceiveOrderSituation != null ? totalReceiveOrderSituation.bounty : 0}}元</span>
+						</div>
+					</div>
+					<div class="row gathering-item" v-show="accountType == 'agent'">
+						<div class="col-sm-8 offset-sm-4">
+							<label>代理佣金</label> <span>{{totalReceiveOrderSituation != null ? totalReceiveOrderSituation.rebateAmount : 0}}元</span>
 						</div>
 					</div>
 				</div>
@@ -150,6 +161,7 @@
 			el : '#index',
 			data : {
 				isLoggedInFlag : false,
+				accountType : '',
 				showTodayReceiveOrderSituationFlag : false,
 				todayReceiveOrderSituation : {},
 				totalReceiveOrderSituation : {},
@@ -161,11 +173,23 @@
 			created : function() {
 			},
 			mounted : function() {
-				headerVM.title = '码王子';
+				var inviteCode = getQueryString('inviteCode');
+				if (inviteCode != null) {
+					window.sessionStorage.setItem('inviteCode', inviteCode);
+				}
+				this.loadSystemSetting();
 				this.getUserAccountInfo();
 				this.loadTodayTop10BountyRank();
 			},
 			methods : {
+
+				loadSystemSetting : function() {
+					var that = this;
+					that.$http.get('/masterControl/getSystemSetting').then(function(res) {
+						document.title = res.body.data.websiteTitle;
+						headerVM.title = res.body.data.websiteTitle;
+					});
+				},
 
 				loadTodayTop10BountyRank : function() {
 					var that = this;
@@ -223,6 +247,7 @@
 					that.$http.get('/userAccount/getUserAccountInfo').then(function(res) {
 						if (res.body.data != null) {
 							that.isLoggedInFlag = true;
+							that.accountType = res.body.data.accountType;
 							that.showTodayReceiveOrderSituation();
 						}
 					});

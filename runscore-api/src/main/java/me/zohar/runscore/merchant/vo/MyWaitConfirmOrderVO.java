@@ -39,19 +39,6 @@ public class MyWaitConfirmOrderVO {
 	private Double gatheringAmount;
 
 	/**
-	 * 提交时间
-	 */
-	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
-	private Date submitTime;
-
-	/**
-	 * 订单状态
-	 */
-	private String orderState;
-
-	private String orderStateName;
-	
-	/**
 	 * 接单时间
 	 */
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
@@ -75,7 +62,6 @@ public class MyWaitConfirmOrderVO {
 		MyWaitConfirmOrderVO vo = new MyWaitConfirmOrderVO();
 		BeanUtils.copyProperties(platformOrder, vo);
 		vo.setGatheringChannelName(DictHolder.getDictItemName("gatheringChannel", vo.getGatheringChannelCode()));
-		vo.setOrderStateName(DictHolder.getDictItemName("platformOrderState", vo.getOrderState()));
 		return vo;
 	}
 	

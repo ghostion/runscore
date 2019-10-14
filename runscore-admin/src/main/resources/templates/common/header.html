@@ -1,6 +1,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
 <script src="https://cdn.bootcss.com/layer/2.3/layer.js"></script>
+<link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
 <style>
 @charset "UTF-8";
 
@@ -10,6 +11,94 @@
 
 .dropdown-item.active {
 	color: #fff !important;
+}
+
+.unread-msg-nav-item {
+	width: 70px;
+	text-align: center;
+}
+
+.unread-msg-nav-item .label {
+	background-color: #00a65a !important;
+	position: absolute;
+	top: 9px;
+	right: 5px;
+	text-align: center;
+	font-size: 9px;
+	padding: 2px 3px;
+	line-height: .9;
+	width: 21px;
+}
+
+.unread-msg-nav-item .dropdown-menu {
+	padding: 0;
+}
+
+.unread-msg-nav-item .dropdown-toggle::after {
+	border: 0;
+}
+
+.unread-msg-nav-item .card {
+	width: 280px;
+}
+
+.unread-msg-nav-item .card-body {
+	padding: 0;
+}
+
+.unread-msg-nav-item .card-header, .unread-msg-nav-item .card-footer {
+	padding: 0.30rem 0.70rem;
+}
+
+.unread-msg-nav-item .card-header {
+	border-bottom: 0;
+}
+
+.unread-msg-nav-item .card-footer {
+	background-color: #fff;
+	text-align: center;
+	cursor: pointer;
+	color: #3788ee;
+	border-top: unset;
+}
+
+.unreaded-msg {
+	cursor: pointer;
+	padding: 0 25px;
+	border-bottom: 1px solid #eee;
+	align-items: center;
+	display: flex;
+}
+
+.unreaded-msg:hover {
+	background: rgba(51, 51, 51, .08);
+}
+
+.unreaded-msg-title:before {
+	content: "";
+	position: absolute;
+	width: 5px;
+	height: 5px;
+	background: #f1556c;
+	border-radius: 5px;
+	left: -10px;
+	top: 5px;
+}
+
+.unreaded-msg-title {
+	margin: 8px 0;
+	position: relative;
+	font-size: 13px;
+}
+
+.unreaded-msg-desc {
+	margin: 8px 0;
+	font-size: 13px;
+	color: #868383;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	width: 250px;
 }
 </style>
 </head>
@@ -25,11 +114,32 @@
 					</div></li>
 				</template>
 			</ul>
-			<form class="form-inline" style="float: right;">
-				<span style="padding-right: 20px;">欢迎你:{{userName}}</span>
-				<button type="button" class="btn btn-light btn-sm" v-on:click="logout">退出登录</button>
-			</form>
+
+			<ul class="navbar-nav" style="float: right;">
+				<li class="nav-item dropdown unread-msg-nav-item"><a class="nav-link dropdown-toggle" data-toggle="dropdown"><i class="fa fa-bell"></i><span class="label label-success">{{todoAppealNum}}</span></a>
+					<div class="dropdown-menu dropdown-menu-right">
+						<div>
+							<div class="card">
+								<div class="card-header">你有{{todoAppealNum}}条未处理的申诉记录</div>
+								<div class="card-body">
+									<div class="unreaded-msg" v-for="todoAppeal in top5TodoAppeals" v-on:click="navTo('/appeal-details?id=' + todoAppeal.id)">
+										<div>
+											<p class="unreaded-msg-title">{{todoAppeal.merchantName}}</p>
+											<p class="unreaded-msg-desc">{{todoAppeal.appealTypeName}}</p>
+										</div>
+									</div>
+								</div>
+								<div class="card-footer" v-on:click="navTo('/appeal-record?appealState=1')">查看更多</div>
+							</div>
+						</div>
+					</div></li>
+				<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" data-toggle="dropdown">zohar001</a>
+					<div class="dropdown-menu dropdown-menu-right">
+						<a class="dropdown-item" v-on:click="logout"><i class="fa fa-sign-out"></i>退出登录</a>
+					</div></li>
+			</ul>
 		</nav>
+		<template v-if="playAudioFlag"> <iframe autoplay="autoplay" src="audio/ring.wav" style="display: none;"></iframe> </template>
 	</div>
 	<script type="text/javascript">
 		Vue.http.interceptors.push(function(request) {
@@ -78,6 +188,9 @@
 						name : '商户管理',
 						url : '/merchant'
 					}, {
+						name : '返点表',
+						url : '/rebate'
+					}, {
 						name : '账变日志',
 						url : '/account-change-log'
 					}, {
@@ -107,12 +220,23 @@
 						name : '字典管理',
 						url : '/dict-manage'
 					} ]
-				} ]
+				} ],
+				top5TodoAppeals : [],
+				todoAppealNum : sessionStorage.getItem('todoAppealNum') == null ? 0 : sessionStorage.getItem('todoAppealNum'),
+				playAudioFlag : false,
 			},
 			computed : {},
 			created : function() {
-				this.currentPathName = window.location.pathname;
-				this.getUserAccountInfo();
+
+			},
+			mounted : function() {
+				var that = this;
+				that.currentPathName = window.location.pathname;
+				that.getUserAccountInfo();
+				that.loadTop5TodoAppealByPage();
+				window.setInterval(function() {
+					that.loadTop5TodoAppealByPage();
+				}, 5000);
 			},
 			methods : {
 
@@ -127,6 +251,20 @@
 
 				navTo : function(url) {
 					window.location.href = url;
+				},
+
+				loadTop5TodoAppealByPage : function() {
+					var that = this;
+					that.$http.get('/appeal/findTop5TodoAppealByPage').then(function(res) {
+						that.playAudioFlag = false;
+						that.top5TodoAppeals = res.body.data.content;
+						var lastTimeTodoAppealNum = that.todoAppealNum;
+						that.todoAppealNum = res.body.data.total;
+						sessionStorage.setItem('todoAppealNum', that.todoAppealNum);
+						if (lastTimeTodoAppealNum != null && lastTimeTodoAppealNum < that.todoAppealNum) {
+							that.playAudioFlag = true;
+						}
+					});
 				},
 
 				/**

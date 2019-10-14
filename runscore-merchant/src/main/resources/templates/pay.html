@@ -333,6 +333,8 @@ html, body {
 						that.orderInfo = res.body.data;
 						if (that.orderInfo.orderState == '4') {
 							that.paySuccessFlag = true;
+							that.toReturnUrl();
+							return;
 						}
 						that.overdueFlag = !dayjs(that.orderInfo.usefulTime).isAfter(dayjs());
 						if (!that.overdueFlag) {
@@ -343,6 +345,13 @@ html, body {
 							}
 						}
 					});
+				},
+
+				toReturnUrl : function() {
+					var that = this;
+					setTimeout(function() {
+						window.location.href = that.orderInfo.returnUrl;
+					}, 2000);
 				},
 
 				loadGatheringCode : function() {
@@ -379,6 +388,7 @@ html, body {
 					that.checkPaySuccessInterval = window.setInterval(function() {
 						if (that.orderInfo.orderState == '4') {
 							that.paySuccessFlag = true;
+							that.toReturnUrl();
 							if (that.checkPaySuccessInterval != null) {
 								window.clearInterval(that.checkPaySuccessInterval);
 								that.checkPaySuccessInterval = null;

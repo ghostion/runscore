@@ -30,6 +30,8 @@ public class AccountReceiveOrderSituationVO implements Serializable {
 
 	private Long paidOrderNum;
 	
+	private Double rebateAmount;
+	
 	public static AccountReceiveOrderSituationVO convertForToday(TodayAccountReceiveOrderSituation situation) {
 		if (situation == null) {
 			return null;

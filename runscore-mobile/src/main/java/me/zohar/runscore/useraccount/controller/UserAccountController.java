@@ -12,10 +12,10 @@ import me.zohar.runscore.common.vo.Result;
 import me.zohar.runscore.config.security.UserAccountDetails;
 import me.zohar.runscore.useraccount.param.AccountChangeLogQueryCondParam;
 import me.zohar.runscore.useraccount.param.BindBankInfoParam;
+import me.zohar.runscore.useraccount.param.LowerLevelAccountChangeLogQueryCondParam;
 import me.zohar.runscore.useraccount.param.ModifyLoginPwdParam;
 import me.zohar.runscore.useraccount.param.ModifyMoneyPwdParam;
 import me.zohar.runscore.useraccount.param.UserAccountRegisterParam;
-import me.zohar.runscore.useraccount.service.InviteCodeService;
 import me.zohar.runscore.useraccount.service.UserAccountService;
 import me.zohar.runscore.useraccount.vo.UserAccountInfoVO;
 
@@ -25,9 +25,6 @@ public class UserAccountController {
 
 	@Autowired
 	private UserAccountService userAccountService;
-	
-	@Autowired
-	private InviteCodeService inviteCodeService;
 
 	@PostMapping("/updateReceiveOrderState")
 	@ResponseBody
@@ -79,7 +76,7 @@ public class UserAccountController {
 	@PostMapping("/register")
 	@ResponseBody
 	public Result register(UserAccountRegisterParam param) {
-		userAccountService.userAccountRegister(param);
+		userAccountService.register(param);
 		return Result.success();
 	}
 
@@ -104,13 +101,13 @@ public class UserAccountController {
 		return Result.success().setData(userAccountService.findAccountChangeLogByPage(param));
 	}
 
-	@GetMapping("/generateInviteCode")
+	@GetMapping("/findLowerLevelAccountChangeLogByPage")
 	@ResponseBody
-	public Result generateInviteCode() {
+	public Result findLowerLevelAccountChangeLogByPage(LowerLevelAccountChangeLogQueryCondParam param) {
 		UserAccountDetails user = (UserAccountDetails) SecurityContextHolder.getContext().getAuthentication()
 				.getPrincipal();
-		inviteCodeService.generateInviteCode(user.getUserAccountId());
-		return Result.success();
+		param.setCurrentAccountId(user.getUserAccountId());
+		return Result.success().setData(userAccountService.findLowerLevelAccountChangeLogByPage(param));
 	}
 
 }
